@@ -3,7 +3,7 @@ import "reflect-metadata";
 
 import dotenv from "dotenv";
 
-dotenv.config({ path: "./.env" });
+dotenv.config();
 
 import { DataSource } from "typeorm";
 
@@ -68,9 +68,5 @@ database: process.env.DB_NAME,
   options: {
     encrypt: false,
     trustServerCertificate: true,
-  },
-
-  extra: {
-    server: process.env.DB_HOST,
   },
 });

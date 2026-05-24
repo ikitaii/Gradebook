@@ -7,6 +7,9 @@ import subjectRoutes from "./routes/subjectRoutes";
 import cookieParser from "cookie-parser";
 import { AppDataSource } from "./database/data-source";
 import authRoutes from "./routes/authRoutes";
+import journalRoutes from "./routes/journal.routes";
+
+
 dotenv.config();
 
 const app = express();
@@ -18,6 +21,7 @@ app.use("/groups", groupRoutes);
 app.use("/students", studentRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/auth", authRoutes);
+app.use("/journal", journalRoutes);
 app.get("/", (_, res) => {
   res.json({
     message: "Server works",
