@@ -1,10 +1,19 @@
 import { Request, Response } from "express";
+
 import bcrypt from "bcryptjs";
 
-import { AppDataSource } from "../database/data-source";
-import { User, UserRole } from "../entities/User";
+import jwt from "jsonwebtoken";
 
-import { generateAccessToken } from "../utils/jwt";
+import { AppDataSource } from "../database/data-source";
+
+import { User } from "../entities/User";
+
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/jwt";
+
+import { AuthRequest } from "../middlewares/authMiddleware";
 
 export class AuthController {
   static async register(
@@ -46,13 +55,34 @@ export class AuthController {
 
       await userRepository.save(user);
 
-      const token = generateAccessToken(
-        user.id,
-        user.role
+      const accessToken =
+        generateAccessToken(
+          user.id,
+          user.role
+        );
+
+      const refreshToken =
+        generateRefreshToken(
+          user.id,
+          user.role
+        );
+
+      res.cookie(
+        "refreshToken",
+        refreshToken,
+        {
+          httpOnly: true,
+          maxAge:
+            7 *
+            24 *
+            60 *
+            60 *
+            1000,
+        }
       );
 
       return res.json({
-        token,
+        accessToken,
         user,
       });
     } catch (error) {
@@ -98,13 +128,34 @@ export class AuthController {
         });
       }
 
-      const token = generateAccessToken(
-        user.id,
-        user.role
+      const accessToken =
+        generateAccessToken(
+          user.id,
+          user.role
+        );
+
+      const refreshToken =
+        generateRefreshToken(
+          user.id,
+          user.role
+        );
+
+      res.cookie(
+        "refreshToken",
+        refreshToken,
+        {
+          httpOnly: true,
+          maxAge:
+            7 *
+            24 *
+            60 *
+            60 *
+            1000,
+        }
       );
 
       return res.json({
-        token,
+        accessToken,
         user,
       });
     } catch (error) {
@@ -112,6 +163,67 @@ export class AuthController {
 
       return res.status(500).json({
         message: "Login error",
+      });
+    }
+  }
+
+  static async refresh(
+    req: Request,
+    res: Response
+  ) {
+    try {
+      const refreshToken =
+        req.cookies.refreshToken;
+
+      if (!refreshToken) {
+        return res.status(401).json({
+          message: "No refresh token",
+        });
+      }
+
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env
+          .JWT_REFRESH_SECRET as string
+      ) as any;
+
+      const accessToken =
+        generateAccessToken(
+          decoded.id,
+          decoded.role
+        );
+
+      return res.json({
+        accessToken,
+      });
+    } catch (error) {
+      return res.status(401).json({
+        message:
+          "Invalid refresh token",
+      });
+    }
+  }
+
+  static async logout(
+    req: Request,
+    res: Response
+  ) {
+    res.clearCookie("refreshToken");
+
+    return res.json({
+      message: "Logged out",
+    });
+  }
+
+  static async me(
+    req: AuthRequest,
+    res: Response
+  ) {
+    try {
+      return res.json(req.user);
+    } catch (error) {
+      return res.status(500).json({
+        message: "Server error",
       });
     }
   }
