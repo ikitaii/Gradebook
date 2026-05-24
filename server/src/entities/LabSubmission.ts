@@ -5,30 +5,31 @@ import {
   Column,
   CreateDateColumn,
 } from "typeorm";
+
 import { Team } from "./Team";
 import { Lab } from "./Lab";
 import { Student } from "./Student";
 
 export enum SubmissionStatus {
-  SUBMITTED = "SUBMITTED",
+  PENDING = "PENDING",
   CHECKED = "CHECKED",
   REVISION = "REVISION",
-  OVERDUE = "OVERDUE",
+  LATE = "LATE",
 }
 
 @Entity()
 export class LabSubmission {
   @PrimaryGeneratedColumn()
   id!: number;
-
-  @ManyToOne(
-    () => Lab,
-    (lab) => lab.submissions
-  )
+ 
+  @ManyToOne(() => Lab, (lab) => lab.submissions)
   lab!: Lab;
-
-  @ManyToOne(() => Team)
-  team!: Team;
+ 
+  @ManyToOne(() => Student)
+  student!: Student;
+ 
+  @ManyToOne(() => Team, { nullable: true })
+  team?: Team;
 
   @Column()
   fileUrl!: string;

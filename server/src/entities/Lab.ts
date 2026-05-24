@@ -10,6 +10,7 @@ import {
 import { Subject } from "./Subject";
 import { Teacher } from "./Teacher";
 import { LabSubmission } from "./LabSubmission";
+import { Lesson } from "./Lesson";
 
 @Entity()
 export class Lab {
@@ -34,6 +35,9 @@ export class Lab {
 
   @ManyToOne(() => Teacher)
   teacher!: Teacher;
+
+  @ManyToOne(() => Lesson)
+  lesson!: Lesson;
 
   @OneToMany(
     () => LabSubmission,
