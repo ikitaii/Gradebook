@@ -8,7 +8,12 @@ export class LabController {
   }
 
   static async getAll(req: Request, res: Response) {
-    const labs = await LabService.getAll();
-    res.json(labs);
-  }
+  const subjectId = req.query.subjectId
+    ? Number(req.query.subjectId)
+    : undefined;
+
+  const labs = await LabService.getAll(subjectId);
+
+  res.json(labs);
+}
 }

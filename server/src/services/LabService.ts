@@ -9,7 +9,17 @@ export class LabService {
     return repo.save(lab);
   }
 
-  static async getAll() {
-    return repo.find();
+  static async getAll(subjectId?: number) {
+  const repo = AppDataSource.getRepository(Lab);
+
+  if (subjectId) {
+    return repo.find({
+      where: {
+        subject: { id: subjectId },
+      },
+    });
   }
+
+  return repo.find();
+}
 }

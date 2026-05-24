@@ -8,7 +8,8 @@ import cookieParser from "cookie-parser";
 import { AppDataSource } from "./database/data-source";
 import authRoutes from "./routes/authRoutes";
 import journalRoutes from "./routes/journal.routes";
-
+import labRoutes from "./routes/labRoutes";
+import labSubmissionRoutes from "./routes/labSubmissionRoutes";
 
 dotenv.config();
 
@@ -17,11 +18,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
 app.use("/groups", groupRoutes);
 app.use("/students", studentRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/auth", authRoutes);
 app.use("/journal", journalRoutes);
+app.use("/labs", labRoutes);
+app.use("/lab-submissions", labSubmissionRoutes);
+
 app.get("/", (_, res) => {
   res.json({
     message: "Server works",
