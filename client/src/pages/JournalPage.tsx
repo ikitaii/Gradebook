@@ -1,0 +1,340 @@
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import MainLayout from "../layouts/MainLayout";
+
+import { getJournalRequest } from "../api/journal";
+
+import { updateAttendanceRequest } from "../api/attendance";
+
+import { updateGradeRequest } from "../api/grades";
+
+type LessonType = {
+  id: number;
+  date: string;
+};
+
+type StudentJournalType = {
+  student: {
+    id: number;
+    fullName: string;
+  };
+
+  grades: {
+    id: number;
+    value: number;
+    lessonId: number;
+  }[];
+
+  attendance: {
+    id: number;
+    present: boolean;
+    lessonId: number;
+  }[];
+};
+
+export default function JournalPage() {
+  const [lessons, setLessons] =
+    useState<LessonType[]>([]);
+
+  const [students, setStudents] =
+    useState<StudentJournalType[]>(
+      []
+    );
+
+  const loadJournal =
+    async () => {
+      try {
+        const data =
+          await getJournalRequest(1);
+
+        setLessons(data.lessons);
+
+        setStudents(data.students);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const handleAttendance =
+    async (
+      studentId: number,
+      lessonId: number,
+      present: boolean
+    ) => {
+      try {
+        await updateAttendanceRequest(
+          studentId,
+          lessonId,
+          present
+        );
+
+        loadJournal();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const handleGrade =
+    async (
+      studentId: number,
+      lessonId: number
+    ) => {
+      const value = Number(
+        prompt("Введите оценку")
+      );
+
+      if (!value) return;
+
+      try {
+        await updateGradeRequest(
+          studentId,
+          lessonId,
+          value
+        );
+
+        loadJournal();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const getGradeColor = (
+    value: number
+  ) => {
+    if (value >= 8)
+      return "bg-green-100 text-green-700";
+
+    if (value >= 5)
+      return "bg-yellow-100 text-yellow-700";
+
+    return "bg-red-100 text-red-700";
+  };
+
+  useEffect(() => {
+    loadJournal();
+  }, []);
+
+  return (
+    <MainLayout>
+      <div className="mb-8">
+        <h1
+          className="
+            text-3xl
+            font-bold
+          "
+        >
+          Электронный журнал
+        </h1>
+
+        <p
+          className="
+            text-gray-500
+            mt-1
+          "
+        >
+          Успеваемость и посещаемость
+        </p>
+      </div>
+
+      <div
+        className="
+          bg-white
+          border
+          border-gray-200
+          rounded-2xl
+          shadow-sm
+          overflow-auto
+        "
+      >
+        <table
+          className="
+            min-w-full
+            border-collapse
+          "
+        >
+          <thead
+            className="
+              bg-gray-50
+              border-b
+              border-gray-200
+              sticky
+              top-0
+            "
+          >
+            <tr>
+              <th
+                className="
+                  px-6
+                  py-4
+                  text-left
+                  font-semibold
+                  min-w-[220px]
+                "
+              >
+                Студент
+              </th>
+
+              {lessons.map(
+                (lesson) => (
+                  <th
+                    key={lesson.id}
+                    className="
+                      px-4
+                      py-4
+                      text-center
+                      font-semibold
+                      min-w-[120px]
+                    "
+                  >
+                    {lesson.date}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+
+          <tbody>
+            {students.map(
+              (item) => (
+                <tr
+                  key={
+                    item.student.id
+                  }
+                  className="
+                    border-b
+                    border-gray-100
+                    hover:bg-gray-50
+                  "
+                >
+                  <td
+                    className="
+                      px-6
+                      py-5
+                      font-medium
+                    "
+                  >
+                    {
+                      item.student
+                        .fullName
+                    }
+                  </td>
+
+                  {lessons.map(
+                    (lesson) => {
+                      const grade =
+                        item.grades.find(
+                          (
+                            g
+                          ) =>
+                            g.lessonId ===
+                            lesson.id
+                        );
+
+                      const attendance =
+                        item.attendance.find(
+                          (
+                            a
+                          ) =>
+                            a.lessonId ===
+                            lesson.id
+                        );
+
+                      return (
+                        <td
+                          key={
+                            lesson.id
+                          }
+                          className="
+                            px-4
+                            py-4
+                            text-center
+                          "
+                        >
+                          <div
+                            className="
+                              flex
+                              flex-col
+                              items-center
+                              gap-2
+                            "
+                          >
+                            <button
+                              onClick={() =>
+                                handleGrade(
+                                  item
+                                    .student
+                                    .id,
+                                  lesson.id
+                                )
+                              }
+                              className={`
+                                min-w-[50px]
+                                py-2
+                                rounded-lg
+                                font-semibold
+                                transition
+                                hover:scale-105
+                                ${
+                                  grade
+                                    ? getGradeColor(
+                                        grade.value
+                                      )
+                                    : "bg-gray-100 text-gray-500"
+                                }
+                              `}
+                            >
+                              {grade
+                                ? grade.value
+                                : "-"}
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                handleAttendance(
+                                  item
+                                    .student
+                                    .id,
+                                  lesson.id,
+                                  attendance
+                                    ? !attendance.present
+                                    : true
+                                )
+                              }
+                              className={`
+                                w-[50px]
+                                py-2
+                                rounded-lg
+                                transition
+                                hover:scale-105
+                                ${
+                                  attendance
+                                    ? attendance.present
+                                      ? "bg-green-100"
+                                      : "bg-red-100"
+                                    : "bg-gray-100"
+                                }
+                              `}
+                            >
+                              {attendance
+                                ? attendance.present
+                                  ? "✅"
+                                  : "❌"
+                                : "-"}
+                            </button>
+                          </div>
+                        </td>
+                      );
+                    }
+                  )}
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
+      </div>
+    </MainLayout>
+  );
+}

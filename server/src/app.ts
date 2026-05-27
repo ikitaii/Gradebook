@@ -10,12 +10,19 @@ import authRoutes from "./routes/authRoutes";
 import journalRoutes from "./routes/journal.routes";
 import labRoutes from "./routes/labRoutes";
 import labSubmissionRoutes from "./routes/labSubmissionRoutes";
-
+import path from "path";
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin:
+      "http://localhost:5173",
+
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 

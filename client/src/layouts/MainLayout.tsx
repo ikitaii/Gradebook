@@ -1,4 +1,7 @@
-import { Link } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 
 import { useAuth } from "../store/AuthContext";
 
@@ -10,96 +13,237 @@ export default function MainLayout({
   const { user, logout } =
     useAuth();
 
+  const location =
+    useLocation();
+
+  const navItems =
+  user?.role === "ADMIN"
+    ? [
+        {
+          path: "/",
+          label: "Главная",
+        },
+
+        {
+          path: "/groups",
+          label: "Группы",
+        },
+
+        {
+          path: "/students",
+          label: "Студенты",
+        },
+
+        {
+          path: "/subjects",
+          label: "Предметы",
+        },
+
+        {
+          path: "/journal",
+          label: "Журнал",
+        },
+
+        {
+          path: "/lessons",
+          label: "Пары",
+        },
+
+        {
+          path: "/schedule",
+          label: "Расписание",
+        },
+
+        {
+          path: "/labs",
+          label: "Лабораторные",
+        },
+      ]
+
+    : user?.role ===
+      "TEACHER"
+
+    ? [
+        {
+          path: "/",
+          label: "Главная",
+        },
+
+        {
+          path: "/journal",
+          label: "Журнал",
+        },
+
+        {
+          path: "/lessons",
+          label: "Пары",
+        },
+
+        {
+          path: "/labs",
+          label: "Лабораторные",
+        },
+      ]
+
+    : [
+        {
+          path: "/",
+          label: "Главная",
+        },
+
+        {
+          path: "/journal",
+          label: "Мои оценки",
+        },
+
+        {
+          path: "/labs",
+          label: "Лабораторные",
+        },
+      ];
+
   return (
     <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-      }}
+      className="
+        flex
+        min-h-screen
+        bg-gray-100
+      "
     >
       <aside
-        style={{
-          width: "250px",
-          background: "#1e1e1e",
-          color: "white",
-          padding: "20px",
-        }}
+        className="
+          w-[260px]
+          bg-white
+          border-r
+          border-gray-200
+          p-6
+          flex
+          flex-col
+        "
       >
-        <h2>Gradebook</h2>
+        <h2
+          className="
+            text-3xl
+            font-bold
+            mb-10
+          "
+        >
+          Gradebook
+        </h2>
 
         <nav
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            marginTop: "20px",
-          }}
+          className="
+            flex
+            flex-col
+            gap-2
+          "
         >
-          <Link to="/">
-            Dashboard
-          </Link>
-
-          <Link to="/groups">
-            Groups
-          </Link>
-
-          <Link to="/students">
-            Students
-          </Link>
-
-          <Link to="/subjects">
-            Subjects
-          </Link>
-
-          <Link to="/journal">
-            Journal
-          </Link>
-
-          <Link to="/schedule">
-            Schedule
-          </Link>
-
-          <Link to="/labs">
-            Labs
-          </Link>
+          {navItems.map(
+            (item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`
+                  px-4
+                  py-3
+                  rounded-xl
+                  transition
+                  font-medium
+                  ${
+                    location.pathname ===
+                    item.path
+                      ? "bg-black text-white"
+                      : "text-gray-700 hover:bg-gray-200"
+                  }
+                `}
+              >
+                {item.label}
+              </Link>
+            )
+          )}
         </nav>
+
+        <div className="mt-auto">
+          <div
+            className="
+              border-t
+              border-gray-200
+              pt-5
+            "
+          >
+            <div
+              className="
+                text-sm
+                text-gray-500
+                mb-2
+              "
+            >
+              Пользователь
+            </div>
+
+            <div
+              className="
+                font-semibold
+                mb-4
+              "
+            >
+              {user?.fullName}
+            </div>
+
+            <button
+              onClick={logout}
+              className="
+                w-full
+                bg-red-500
+                text-white
+                py-3
+                rounded-xl
+                hover:bg-red-600
+                transition
+              "
+            >
+              Выйти
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <div
-        style={{
-          flex: 1,
-        }}
-      >
+      <div className="flex-1">
         <header
-          style={{
-            height: "70px",
-            borderBottom:
-              "1px solid #ddd",
-
-            display: "flex",
-
-            alignItems: "center",
-
-            justifyContent:
-              "space-between",
-
-            padding: "0 20px",
-          }}
+          className="
+            h-[80px]
+            bg-white
+            border-b
+            border-gray-200
+            flex
+            items-center
+            justify-between
+            px-8
+          "
         >
           <div>
-            {user?.fullName}
+            <h1
+              className="
+                text-2xl
+                font-bold
+              "
+            >
+              Электронный журнал
+            </h1>
           </div>
 
-          <button onClick={logout}>
-            Logout
-          </button>
+          <div
+            className="
+              text-gray-600
+            "
+          >
+            {
+              user?.role
+            }
+          </div>
         </header>
 
-        <main
-          style={{
-            padding: "20px",
-          }}
-        >
+        <main className="p-8">
           {children}
         </main>
       </div>

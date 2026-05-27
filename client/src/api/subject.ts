@@ -1,18 +1,18 @@
 import api from ".";
 
-export const getGroupsRequest =
+export const getSubjectsRequest =
   async () => {
     const response = await api.get(
-      "/groups"
+      "/subjects"
     );
 
     return response.data;
   };
 
-export const createGroupRequest =
+export const createSubjectRequest =
   async (name: string) => {
     const response = await api.post(
-      "/groups",
+      "/subjects",
       {
         name,
       }
@@ -21,11 +21,11 @@ export const createGroupRequest =
     return response.data;
   };
 
-export const deleteGroupRequest =
+export const deleteSubjectRequest =
   async (id: number) => {
     const response =
       await api.delete(
-        `/groups/${id}`
+        `/subjects/${id}`
       );
 
     return response.data;

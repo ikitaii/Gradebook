@@ -6,46 +6,47 @@ import {
 import MainLayout from "../layouts/MainLayout";
 
 import {
-  getGroupsRequest,
-  createGroupRequest,
-  deleteGroupRequest,
-} from "../api/groups";
+  getSubjectsRequest,
+  createSubjectRequest,
+  deleteSubjectRequest,
+} from "../api/subject";
 
-type GroupType = {
+type SubjectType = {
   id: number;
   name: string;
 };
 
-export default function GroupsPage() {
-  const [groups, setGroups] =
-    useState<GroupType[]>([]);
+export default function SubjectsPage() {
+  const [subjects, setSubjects] =
+    useState<SubjectType[]>([]);
 
   const [name, setName] =
     useState("");
 
-  const loadGroups = async () => {
-    try {
-      const data =
-        await getGroupsRequest();
+  const loadSubjects =
+    async () => {
+      try {
+        const data =
+          await getSubjectsRequest();
 
-      setGroups(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+        setSubjects(data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   const handleCreate =
     async () => {
       try {
         if (!name.trim()) return;
 
-        await createGroupRequest(
+        await createSubjectRequest(
           name
         );
 
         setName("");
 
-        loadGroups();
+        loadSubjects();
       } catch (error) {
         console.log(error);
       }
@@ -54,16 +55,18 @@ export default function GroupsPage() {
   const handleDelete =
     async (id: number) => {
       try {
-        await deleteGroupRequest(id);
+        await deleteSubjectRequest(
+          id
+        );
 
-        loadGroups();
+        loadSubjects();
       } catch (error) {
         console.log(error);
       }
     };
 
   useEffect(() => {
-    loadGroups();
+    loadSubjects();
   }, []);
 
   return (
@@ -83,7 +86,7 @@ export default function GroupsPage() {
               font-bold
             "
           >
-            Группы
+            Предметы
           </h1>
 
           <p
@@ -92,8 +95,7 @@ export default function GroupsPage() {
               mt-1
             "
           >
-            Управление
-            учебными группами
+            Управление предметами
           </p>
         </div>
       </div>
@@ -116,7 +118,7 @@ export default function GroupsPage() {
             mb-5
           "
         >
-          Создать группу
+          Создать предмет
         </h2>
 
         <div
@@ -127,7 +129,7 @@ export default function GroupsPage() {
         >
           <input
             type="text"
-            placeholder="Название группы"
+            placeholder="Название предмета"
             value={name}
             onChange={(e) =>
               setName(
@@ -200,7 +202,7 @@ export default function GroupsPage() {
                   font-semibold
                 "
               >
-                Название группы
+                Название предмета
               </th>
 
               <th
@@ -217,67 +219,70 @@ export default function GroupsPage() {
           </thead>
 
           <tbody>
-            {groups.map((group) => (
-              <tr
-                key={group.id}
-                className="
-                  border-b
-                  border-gray-100
-                  hover:bg-gray-50
-                  transition
-                "
-              >
-                <td
+            {subjects.map(
+              (subject) => (
+                <tr
+                  key={subject.id}
                   className="
-                    px-6
-                    py-4
+                    border-b
+                    border-gray-100
+                    hover:bg-gray-50
+                    transition
                   "
                 >
-                  {group.id}
-                </td>
-
-                <td
-                  className="
-                    px-6
-                    py-4
-                    font-medium
-                  "
-                >
-                  {group.name}
-                </td>
-
-                <td
-                  className="
-                    px-6
-                    py-4
-                    text-right
-                  "
-                >
-                  <button
-                    onClick={() =>
-                      handleDelete(
-                        group.id
-                      )
-                    }
+                  <td
                     className="
-                      bg-red-500
-                      text-white
-                      px-4
-                      py-2
-                      rounded-lg
-                      hover:bg-red-600
-                      transition
+                      px-6
+                      py-4
                     "
                   >
-                    Удалить
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    {subject.id}
+                  </td>
+
+                  <td
+                    className="
+                      px-6
+                      py-4
+                      font-medium
+                    "
+                  >
+                    {subject.name}
+                  </td>
+
+                  <td
+                    className="
+                      px-6
+                      py-4
+                      text-right
+                    "
+                  >
+                    <button
+                      onClick={() =>
+                        handleDelete(
+                          subject.id
+                        )
+                      }
+                      className="
+                        bg-red-500
+                        text-white
+                        px-4
+                        py-2
+                        rounded-lg
+                        hover:bg-red-600
+                        transition
+                      "
+                    >
+                      Удалить
+                    </button>
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
 
-        {groups.length === 0 && (
+        {subjects.length ===
+          0 && (
           <div
             className="
               p-10
@@ -285,7 +290,7 @@ export default function GroupsPage() {
               text-gray-500
             "
           >
-            Группы отсутствуют
+            Предметы отсутствуют
           </div>
         )}
       </div>

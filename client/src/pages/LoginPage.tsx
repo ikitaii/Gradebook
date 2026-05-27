@@ -33,73 +33,96 @@ export default function LoginPage() {
 
       navigate("/");
     } catch (error) {
-      setError("Login error");
+      setError(
+        "Ошибка входа"
+      );
     }
   };
 
   return (
     <div
-      style={{
-        height: "100vh",
-
-        display: "flex",
-
-        justifyContent: "center",
-
-        alignItems: "center",
-      }}
+      className="
+        min-h-screen
+        flex
+        items-center
+        justify-center
+        bg-gray-100
+      "
     >
       <div
-        style={{
-          width: "400px",
-
-          padding: "30px",
-
-          border:
-            "1px solid #ddd",
-
-          borderRadius: "10px",
-        }}
+        className="
+          w-[420px]
+          bg-white
+          p-10
+          rounded-2xl
+          shadow-md
+          border
+          border-gray-200
+        "
       >
-        <h1>Login</h1>
+        <h1
+          className="
+            text-3xl
+            font-bold
+            mb-8
+            text-center
+          "
+        >
+          Вход
+        </h1>
 
-        <input
-          type="text"
-          placeholder="Login"
-          value={login}
-          onChange={(e) =>
-            setLogin(
-              e.target.value
-            )
-          }
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-            padding: "10px",
-          }}
-        />
+        <div className="mb-5">
+          <input
+            type="text"
+            placeholder="Логин"
+            value={login}
+            onChange={(e) =>
+              setLogin(
+                e.target.value
+              )
+            }
+            className="
+              w-full
+              border
+              border-gray-300
+              rounded-lg
+              px-4
+              py-3
+              outline-none
+              focus:border-blue-500
+            "
+          />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) =>
-            setPassword(
-              e.target.value
-            )
-          }
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-            padding: "10px",
-          }}
-        />
+        <div className="mb-5">
+          <input
+            type="password"
+            placeholder="Пароль"
+            value={password}
+            onChange={(e) =>
+              setPassword(
+                e.target.value
+              )
+            }
+            className="
+              w-full
+              border
+              border-gray-300
+              rounded-lg
+              px-4
+              py-3
+              outline-none
+              focus:border-blue-500
+            "
+          />
+        </div>
 
         {error && (
           <p
-            style={{
-              color: "red",
-            }}
+            className="
+              text-red-500
+              mb-4
+            "
           >
             {error}
           </p>
@@ -107,12 +130,17 @@ export default function LoginPage() {
 
         <button
           onClick={handleLogin}
-          style={{
-            width: "100%",
-            padding: "10px",
-          }}
+          className="
+            w-full
+            bg-black
+            text-white
+            py-3
+            rounded-lg
+            hover:bg-gray-800
+            transition
+          "
         >
-          Login
+          Войти
         </button>
       </div>
     </div>

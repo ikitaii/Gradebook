@@ -1,31 +1,37 @@
 import api from ".";
 
-export const getGroupsRequest =
+export const getStudentsRequest =
   async () => {
     const response = await api.get(
-      "/groups"
+      "/students"
     );
 
     return response.data;
   };
 
-export const createGroupRequest =
-  async (name: string) => {
+export const createStudentRequest =
+  async (
+    userId: number,
+    groupId: number
+  ) => {
     const response = await api.post(
-      "/groups",
+      "/students",
       {
-        name,
+        userId,
+        groupId,
+        expelled: false,
+        isNew: true,
       }
     );
 
     return response.data;
   };
 
-export const deleteGroupRequest =
+export const deleteStudentRequest =
   async (id: number) => {
     const response =
       await api.delete(
-        `/groups/${id}`
+        `/students/${id}`
       );
 
     return response.data;
