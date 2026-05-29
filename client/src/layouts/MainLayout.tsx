@@ -17,90 +17,122 @@ export default function MainLayout({
     useLocation();
 
   const navItems =
-  user?.role === "ADMIN"
-    ? [
-        {
-          path: "/",
-          label: "Главная",
-        },
+    user?.role === "ADMIN"
+      ? [
+          {
+            path: "/",
+            label: "Главная",
+          },
 
-        {
-          path: "/groups",
-          label: "Группы",
-        },
+          {
+            path: "/groups",
+            label: "Группы",
+          },
 
-        {
-          path: "/students",
-          label: "Студенты",
-        },
+          {
+            path: "/students",
+            label: "Студенты",
+          },
 
-        {
-          path: "/subjects",
-          label: "Предметы",
-        },
+          {
+            path: "/subjects",
+            label: "Предметы",
+          },
 
-        {
-          path: "/journal",
-          label: "Журнал",
-        },
+          {
+            path: "/journal",
+            label: "Журнал",
+          },
 
-        {
-          path: "/lessons",
-          label: "Пары",
-        },
+          {
+            path: "/lessons",
+            label: "Пары",
+          },
 
-        {
-          path: "/schedule",
-          label: "Расписание",
-        },
+          {
+            path: "/schedule",
+            label: "Расписание",
+          },
 
-        {
-          path: "/labs",
-          label: "Лабораторные",
-        },
-      ]
+          {
+            path: "/labs",
+            label:
+              "Лабораторные",
+          },
+        ]
 
-    : user?.role ===
-      "TEACHER"
+      : user?.role ===
+        "TEACHER"
 
-    ? [
-        {
-          path: "/",
-          label: "Главная",
-        },
+      ? [
+          {
+            path: "/",
+            label: "Главная",
+          },
 
-        {
-          path: "/journal",
-          label: "Журнал",
-        },
+          {
+            path: "/journal",
+            label: "Журнал",
+          },
 
-        {
-          path: "/lessons",
-          label: "Пары",
-        },
+          {
+            path: "/lessons",
+            label: "Пары",
+          },
 
-        {
-          path: "/labs",
-          label: "Лабораторные",
-        },
-      ]
+          {
+            path: "/schedule",
+            label:
+              "Расписание",
+          },
 
-    : [
-        {
-          path: "/",
-          label: "Главная",
-        },
+          {
+            path: "/labs",
+            label:
+              "Лабораторные",
+          },
+        ]
 
-        {
-          path: "/journal",
-          label: "Мои оценки",
-        },
+      : [
+          {
+            path: "/",
+            label: "Главная",
+          },
 
-        {
-          path: "/labs",
-          label: "Лабораторные",
-        },
-      ];
+          {
+            path: "/schedule",
+            label:
+              "Расписание",
+          },
+
+          {
+            path: "/journal",
+            label:
+              "Мои оценки",
+          },
+
+          {
+            path: "/labs",
+            label:
+              "Лабораторные",
+          },
+        ];
+
+  const getRoleLabel = () => {
+    switch (user?.role) {
+      case "ADMIN":
+        return "Администратор";
+
+      case "TEACHER":
+        return "Преподаватель";
+
+      case "STUDENT":
+        return "Студент";
+
+      default:
+        return "Пользователь";
+    }
+  };
 
   return (
     <div
@@ -184,10 +216,20 @@ export default function MainLayout({
             <div
               className="
                 font-semibold
-                mb-4
+                mb-1
               "
             >
               {user?.fullName}
+            </div>
+
+            <div
+              className="
+                text-sm
+                text-gray-500
+                mb-4
+              "
+            >
+              {getRoleLabel()}
             </div>
 
             <button
@@ -235,11 +277,10 @@ export default function MainLayout({
           <div
             className="
               text-gray-600
+              font-medium
             "
           >
-            {
-              user?.role
-            }
+            {getRoleLabel()}
           </div>
         </header>
 

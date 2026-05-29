@@ -10,11 +10,12 @@ import authRoutes from "./routes/authRoutes";
 import journalRoutes from "./routes/journal.routes";
 import labRoutes from "./routes/labRoutes";
 import labSubmissionRoutes from "./routes/labSubmissionRoutes";
+import lessonRoutes from "./routes/lessonRoutes";
 import path from "path";
 dotenv.config();
 
 const app = express();
-
+app.use("/lessons", lessonRoutes);
 app.use(
   cors({
     origin:
