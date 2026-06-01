@@ -5,6 +5,8 @@ import {
 
 import MainLayout from "../layouts/MainLayout";
 import toast from "react-hot-toast";
+import EmptyState from "../components/common/EmptyState";
+import ErrorState from "../components/common/ErrorState";
 import {
   uploadLabRequest,
   getLabsRequest,
@@ -30,7 +32,8 @@ type LabType = {
 export default function LabsPage() {
   const [labs, setLabs] =
     useState<LabType[]>([]);
-
+  const [error, setError] =
+    useState(false);
   const [
     selectedFiles,
     setSelectedFiles,
@@ -44,8 +47,10 @@ const loadLabs =
         await getLabsRequest();
 
       setLabs(data);
+    
     } catch (error) {
       console.log(error);
+      setError(true);
     }
   };
   
@@ -112,8 +117,15 @@ useEffect(() => {
 );
       }
     };
-
+      if (error) {
+        return (
+    <ErrorState
+      message="Ошибка загрузки"
+    />
+  );
+}
   return (
+    
     <MainLayout>
       <div className="mb-8">
         <h1
@@ -322,21 +334,10 @@ useEffect(() => {
         })}
       </div>
 
-      {labs.length === 0 && (
-        <div
-          className="
-            bg-white
-            border
-            border-gray-200
-            rounded-2xl
-            p-10
-            text-center
-            text-gray-500
-          "
-        >
-          Лабораторные работы
-          отсутствуют
-        </div>
+        {labs.length === 0 && (
+          <EmptyState
+            message="Лабораторные работы отсутствуют"
+          />
       )}
     </MainLayout>
   );

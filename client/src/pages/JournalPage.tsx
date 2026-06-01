@@ -11,11 +11,15 @@ import { updateAttendanceRequest } from "../api/attendance";
 
 import { updateGradeRequest } from "../api/grades";
 
+import FilterSelect from "../components/filters/FilterSelect";
+
+import { getGroupsRequest } from "../api/groups";
+
+import { exportCsv } from "../utils/exportCsv";
 type LessonType = {
   id: number;
   date: string;
 };
-
 type StudentJournalType = {
   student: {
     id: number;
@@ -43,7 +47,15 @@ export default function JournalPage() {
     useState<StudentJournalType[]>(
       []
     );
+  const [groupFilter, setGroupFilter] =  
+    useState("Все группы");
+  type GroupType = {
+  id: number;
+  name: string;
+};
 
+const [groups, setGroups] =
+  useState<GroupType[]>([]);
   const loadJournal =
     async () => {
       try {
@@ -112,11 +124,24 @@ export default function JournalPage() {
 
     return "bg-red-100 text-red-700";
   };
+  const handleExportCsv = () => {
+  const rows = [
+    ["Студент"],
+    ...students.map((student) => [
+      student.student.fullName,
+    ]),
+  ];
+
+  exportCsv("journal", rows);
+};
 
   useEffect(() => {
-    loadJournal();
-  }, []);
+  loadJournal();
 
+  getGroupsRequest().then((data) => {
+    setGroups(data);
+  });
+}, []);
   return (
     <MainLayout>
       <div className="mb-8">
@@ -137,8 +162,32 @@ export default function JournalPage() {
         >
           Успеваемость и посещаемость
         </p>
+      <button
+      onClick={handleExportCsv}
+      className="
+        bg-black
+        hover:bg-gray-800
+        transition
+        text-white
+        px-4
+        py-2
+        rounded-xl
+        mt-4
+      "
+    >
+        Экспорт CSV
+    </button>
       </div>
-
+      <div className="mb-6">
+      <FilterSelect
+        value={groupFilter}
+        onChange={setGroupFilter}
+       options={[
+        "Все группы",
+          ...groups.map((g) => g.name),
+]}
+      />
+      </div>
       <div
         className="
           bg-white
@@ -206,7 +255,8 @@ export default function JournalPage() {
                   className="
                     border-b
                     border-gray-100
-                    hover:bg-gray-50
+                    hover:bg-gray-100
+                    transition
                   "
                 >
                   <td
@@ -277,6 +327,7 @@ export default function JournalPage() {
                                 font-semibold
                                 transition
                                 hover:scale-105
+                                duration-150
                                 ${
                                   grade
                                     ? getGradeColor(
@@ -309,6 +360,7 @@ export default function JournalPage() {
                                 rounded-lg
                                 transition
                                 hover:scale-105
+                                duration-150
                                 ${
                                   attendance
                                     ? attendance.present

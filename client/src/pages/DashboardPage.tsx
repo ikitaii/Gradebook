@@ -1,5 +1,8 @@
 import MainLayout from "../layouts/MainLayout";
-
+import AverageGradeCard from "../components/analytics/AverageGradeCard";
+import AttendanceCard from "../components/analytics/AttendanceCard";
+import StudentsCountCard from "../components/analytics/StudentsCountCard";
+import GradesChart from "../components/analytics/GradesChart";
 import {
   Users,
   BookOpen,
@@ -137,7 +140,20 @@ export default function DashboardPage() {
           );
         })}
       </div>
+<div className="mb-10">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <AverageGradeCard />
+    <AttendanceCard />
+    <StudentsCountCard />
+  </div>
 
+  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+    <h2 className="text-2xl font-semibold mb-6">
+      Аналитика успеваемости
+    </h2>
+    <GradesChart />
+  </div>
+</div>
       <div
         className="
           grid

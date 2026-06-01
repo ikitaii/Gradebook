@@ -11,7 +11,7 @@ import {
 } from "../api/students";
 
 type StudentType = {
-  id: number;
+  id: number; 
 
   expelled: boolean;
 
@@ -30,7 +30,8 @@ type StudentType = {
 export default function StudentsPage() {
   const [students, setStudents] =
     useState<StudentType[]>([]);
-
+  const [search, setSearch] = 
+    useState("");
   const loadStudents =
     async () => {
       try {
@@ -57,7 +58,12 @@ export default function StudentsPage() {
   useEffect(() => {
     loadStudents();
   }, []);
-
+const filteredStudents = students.filter(
+  (student) =>
+    student.user.fullName
+      .toLowerCase()
+      .includes(search.toLowerCase())
+);
   return (
     <MainLayout>
       <div
@@ -88,7 +94,20 @@ export default function StudentsPage() {
           </p>
         </div>
       </div>
-
+      <input
+  placeholder="Поиск студента"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  className="
+    w-full
+    border
+    border-gray-300
+    rounded-xl
+    px-4
+    py-3
+    mb-6
+  "
+/>
       <div
         className="
           bg-white
@@ -177,7 +196,7 @@ export default function StudentsPage() {
           </thead>
 
           <tbody>
-            {students.map(
+            {filteredStudents.map(
               (student) => (
                 <tr
                   key={student.id}

@@ -16,10 +16,20 @@ import ProtectedRoute from "./ProtectedRoute";
 import LessonsPage from "../pages/LessonsPage";
 import RoleRoute from "./RoleRoute";
 import SchedulePage from "../pages/SchedulePage";
+import LabsPage from "../pages/LabsPage";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route
+  path="/schedule"
+  element={
+    <ProtectedRoute>
+      <SchedulePage />
+    </ProtectedRoute>
+  }
+/>
         <Route
           path="/"
           element={
