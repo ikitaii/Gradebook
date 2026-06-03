@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
-// 1. Изменили схему валидации: теперь проверяем login вместо email
 const loginSchema = z.object({
   login: z.string().min(2, "Логин должен быть не менее 2 символов"),
   password: z.string().min(6, "Пароль должен быть не менее 6 символов"),
@@ -28,7 +27,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      // Передаем login и password на сервер
       await login({ login: data.login, password: data.password });
       toast.success("Вход успешно выполнен! 👋");
       navigate("/");
@@ -38,44 +36,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-      <div style={{ padding: "30px", border: "1px solid #ccc", borderRadius: "8px", width: "100%", maxWidth: "320px" }}>
-        <h1 style={{ marginTop: 0, marginBottom: "20px" }}>Вход в LMS</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-[420px] bg-white p-10 rounded-2xl shadow-md border border-gray-200">
+        <h1 className="text-3xl font-bold mb-8 text-center">Вход в LMS</h1>
         
-        <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          
-          <div>
-  {/* Проверьте эту строку: должен быть Логин */}
-  <input
-    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
-    placeholder="Логин" 
-    {...register("login")}
-  />
-  {errors.login && (
-    <span style={{ color: "red", fontSize: "12px", marginTop: "4px", display: "block" }}>
-      {errors.login.message}
-    </span>
-  )}
-</div>
-
-          <div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-5">
             <input
-              style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
-              placeholder="Пароль"
-              type="password"
-              {...register("password")}
+              type="text"
+              placeholder="Логин"
+              {...register("login")}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
             />
-            {errors.password && (
-              <span style={{ color: "red", fontSize: "12px", marginTop: "4px", display: "block" }}>
-                {errors.password.message}
-              </span>
+            {errors.login && (
+              <p className="text-red-500 text-sm mt-1">{errors.login.message}</p>
             )}
           </div>
 
-          <button type="submit" disabled={isSubmitting} style={{ padding: "10px", cursor: "pointer" }}>
+          <div className="mb-5">
+            <input
+              type="password"
+              placeholder="Пароль"
+              {...register("password")}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-blue-500"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+          >
             {isSubmitting ? "Вход..." : "Войти"}
           </button>
-          
         </form>
       </div>
     </div>

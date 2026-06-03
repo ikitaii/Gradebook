@@ -1,8 +1,7 @@
-import React from "react";
-import { JournalPage } from "./pages/JournalPage";
+import AppRouter from "./router";
 
 function App() {
-  return <JournalPage />;
+  return <AppRouter />;
 }
 
 export default App;

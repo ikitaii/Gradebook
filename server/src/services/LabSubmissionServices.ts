@@ -1,7 +1,7 @@
 import { AppDataSource } from "../database/data-source";
 import { LabSubmission } from "../entities/LabSubmission";
 import { Lab } from "../entities/Lab";
-
+import { Grade } from "../entities/Grade";
 const repo = AppDataSource.getRepository(LabSubmission);
 
 export class LabSubmissionService {
@@ -40,11 +40,26 @@ export class LabSubmissionService {
   }
  
   static async check(id: string, data: any) {
-    await repo.update(id, {
-      ...data,
-      status: "CHECKED",
-    });
+  const submission = await repo.findOne({
+    where: { id: Number(id) },
+    relations: ["student", "lab"],
+  });
 
-    return repo.findOneBy({ id: Number(id) });
+  if (!submission) {
+    throw new Error("Submission not found");
   }
+  await repo.update(id, {
+    ...data,
+    status: "CHECKED",
+  });
+  const gradeRepo = AppDataSource.getRepository(Grade);
+
+  await gradeRepo.save({
+    value: data.grade,
+    student: { id: (submission.student as any).id },
+    lesson: { id: submission.lab.lesson.id },
+  });
+
+  return repo.findOneBy({ id: Number(id) });
+}
 }
