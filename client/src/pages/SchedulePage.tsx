@@ -1,18 +1,21 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
 import MainLayout from "../layouts/MainLayout";
+
+import { useAuth } from "../entities/auth/auth.store";
 
 import { getLessonsRequest } from "../api/lessons";
 
 type LessonType = {
   id: number;
 
-  date: string;
+  lessonDate: string;
 
-  lessonNumber: number;
+  topic: string;
 
   subject: {
     name: string;
@@ -30,8 +33,13 @@ type LessonType = {
 };
 
 export default function SchedulePage() {
+  const { user } =
+    useAuth();
+
   const [lessons, setLessons] =
-    useState<LessonType[]>([]);
+    useState<LessonType[]>(
+      []
+    );
 
   const loadLessons =
     async () => {
@@ -49,12 +57,47 @@ export default function SchedulePage() {
     loadLessons();
   }, []);
 
+  const groupedLessons =
+    useMemo(() => {
+      const grouped: Record<
+        string,
+        LessonType[]
+      > = {};
+
+      lessons.forEach(
+        (lesson) => {
+          const date =
+            new Date(
+              lesson.lessonDate
+            ).toLocaleDateString();
+
+          if (
+            !grouped[
+              date
+            ]
+          ) {
+            grouped[
+              date
+            ] = [];
+          }
+
+          grouped[
+            date
+          ].push(
+            lesson
+          );
+        }
+      );
+
+      return grouped;
+    }, [lessons]);
+
   return (
     <MainLayout>
-      <div className="mb-8">
+      <div className="mb-10">
         <h1
           className="
-            text-3xl
+            text-4xl
             font-bold
             mb-2
           "
@@ -67,7 +110,8 @@ export default function SchedulePage() {
             text-gray-500
           "
         >
-          Актуальное расписание
+          Актуальное
+          расписание занятий
         </p>
       </div>
 
@@ -75,99 +119,199 @@ export default function SchedulePage() {
         className="
           flex
           flex-col
-          gap-5
+          gap-8
         "
       >
-        {lessons.map(
-          (lesson) => (
+        {Object.entries(
+          groupedLessons
+        ).map(
+          ([date, dayLessons]) => (
             <div
-              key={lesson.id}
-              className="
-                bg-white
-                border
-                border-gray-200
-                rounded-3xl
-                p-6
-                shadow-sm
-              "
+              key={date}
             >
               <div
                 className="
-                  flex
-                  items-start
-                  justify-between
+                  text-2xl
+                  font-bold
+                  mb-5
                 "
               >
-                <div>
-                  <h2
-                    className="
-                      text-2xl
-                      font-semibold
-                      mb-2
-                    "
-                  >
-                    {
-                      lesson.subject
-                        .name
-                    }
-                  </h2>
+                {date}
+              </div>
 
-                  <div
-                    className="
-                      text-gray-500
-                      mb-2
-                    "
-                  >
-                    Группа:
-                    {" "}
-                    {
-                      lesson.group
-                        .name
-                    }
-                  </div>
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  xl:grid-cols-2
+                  gap-5
+                "
+              >
+                {dayLessons.map(
+                  (
+                    lesson
+                  ) => (
+                    <div
+                      key={
+                        lesson.id
+                      }
+                      className="
+                        bg-white
+                        border
+                        border-gray-200
+                        rounded-3xl
+                        p-6
+                        shadow-sm
+                        hover:shadow-md
+                        transition
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          justify-between
+                          items-start
+                          mb-5
+                        "
+                      >
+                        <div>
+                          <div
+                            className="
+                              text-2xl
+                              font-bold
+                              mb-2
+                            "
+                          >
+                            {
+                              lesson
+                                .subject
+                                .name
+                            }
+                          </div>
 
-                  <div
-                    className="
-                      text-gray-500
-                    "
-                  >
-                    Преподаватель:
-                    {" "}
-                    {
-                      lesson.teacher
-                        .user
-                        .fullName
-                    }
-                  </div>
-                </div>
+                          <div
+                            className="
+                              text-gray-500
+                            "
+                          >
+                            {new Date(
+                              lesson.lessonDate
+                            ).toLocaleTimeString(
+                              [],
+                              {
+                                hour:
+                                  "2-digit",
 
-                <div
-                  className="
-                    text-right
-                  "
-                >
-                  <div
-                    className="
-                      text-lg
-                      font-semibold
-                    "
-                  >
-                    Пара №
-                    {
-                      lesson.lessonNumber
-                    }
-                  </div>
+                                minute:
+                                  "2-digit",
+                              }
+                            )}
+                          </div>
+                        </div>
 
-                  <div
-                    className="
-                      text-gray-500
-                    "
-                  >
-                    {
-                      lesson.date
-                    }
-                  </div>
-                </div>
+                        <div
+                          className="
+                            bg-black
+                            text-white
+                            px-4
+                            py-2
+                            rounded-full
+                            text-sm
+                            font-medium
+                          "
+                        >
+                          Пара
+                        </div>
+                      </div>
+
+                      <div
+                        className="
+                          flex
+                          flex-col
+                          gap-3
+                          text-gray-700
+                        "
+                      >
+                        <div>
+                          <span
+                            className="
+                              font-semibold
+                            "
+                          >
+                            Группа:
+                          </span>{" "}
+                          {
+                            lesson
+                              .group
+                              .name
+                          }
+                        </div>
+
+                        <div>
+                          <span
+                            className="
+                              font-semibold
+                            "
+                          >
+                            Преподаватель:
+                          </span>{" "}
+                          {
+                            lesson
+                              .teacher
+                              .user
+                              .fullName
+                          }
+                        </div>
+
+                        <div>
+                          <span
+                            className="
+                              font-semibold
+                            "
+                          >
+                            Тема:
+                          </span>{" "}
+                          {lesson.topic ||
+                            "Тема не указана"}
+                        </div>
+                      </div>
+
+                      {user?.role ===
+                        "STUDENT" && (
+                        <div
+                          className="
+                            mt-6
+                            bg-gray-50
+                            border
+                            border-gray-200
+                            rounded-2xl
+                            p-4
+                          "
+                        >
+                          <div
+                            className="
+                              text-sm
+                              text-gray-500
+                              mb-1
+                            "
+                          >
+                            Напоминание
+                          </div>
+
+                          <div
+                            className="
+                              font-medium
+                            "
+                          >
+                            Не забудьте
+                            подготовиться
+                            к занятию
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                )}
               </div>
             </div>
           )
@@ -181,12 +325,30 @@ export default function SchedulePage() {
               border
               border-gray-200
               rounded-3xl
-              p-10
+              p-12
               text-center
-              text-gray-500
             "
           >
-            Расписание пустое
+            <div
+              className="
+                text-2xl
+                font-bold
+                mb-3
+              "
+            >
+              Расписание пусто
+            </div>
+
+            <div
+              className="
+                text-gray-500
+              "
+            >
+              Добавьте пары
+              через раздел
+              управления
+              расписанием
+            </div>
           </div>
         )}
       </div>

@@ -1,53 +1,37 @@
 import { Router } from "express";
 
-import { GroupController } from "../controllers/GroupController";
+import { AppDataSource } from "../database/data-source";
 
-import { authMiddleware } from "../middlewares/authMiddleware";
-
-import { roleMiddleware } from "../middlewares/roleMiddleware";
+import { Group } from "../entities/Group";
 
 const router = Router();
 
 router.get(
   "/",
-  authMiddleware,
-  GroupController.getAll
-);
 
-router.get(
-  "/:id",
-  authMiddleware,
-  GroupController.getOne
-);
+  async (_, res) => {
+    try {
+      const groups =
+        await AppDataSource
+          .getRepository(Group)
+          .find({
+            order: {
+              name: "ASC",
+            },
+          });
 
-router.post(
-  "/",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  GroupController.create
-);
+      return res.json(
+        groups
+      );
+    } catch (error) {
+      console.log(error);
 
-router.patch(
-  "/:id",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  GroupController.update
-);
-
-router.delete(
-  "/:id",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  GroupController.delete
+      return res.status(500).json({
+        message:
+          "Ошибка получения групп",
+      });
+    }
+  }
 );
 
 export default router;

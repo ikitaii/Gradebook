@@ -1,53 +1,39 @@
 import { Router } from "express";
 
-import { SubjectController } from "../controllers/SubjectController";
+import { AppDataSource } from "../database/data-source";
 
-import { authMiddleware } from "../middlewares/authMiddleware";
-
-import { roleMiddleware } from "../middlewares/roleMiddleware";
+import { Subject } from "../entities/Subject";
 
 const router = Router();
 
 router.get(
   "/",
-  authMiddleware,
-  SubjectController.getAll
-);
 
-router.get(
-  "/:id",
-  authMiddleware,
-  SubjectController.getOne
-);
+  async (_, res) => {
+    try {
+      const subjects =
+        await AppDataSource
+          .getRepository(
+            Subject
+          )
+          .find({
+            order: {
+              name: "ASC",
+            },
+          });
 
-router.post(
-  "/",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  SubjectController.create
-);
+      return res.json(
+        subjects
+      );
+    } catch (error) {
+      console.log(error);
 
-router.patch(
-  "/:id",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  SubjectController.update
-);
-
-router.delete(
-  "/:id",
-  authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
-  SubjectController.delete
+      return res.status(500).json({
+        message:
+          "Ошибка получения предметов",
+      });
+    }
+  }
 );
 
 export default router;

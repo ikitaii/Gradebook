@@ -56,8 +56,7 @@ export const HomeworkProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const checkSubmission = async (submissionId: string, status: "ACCEPTED" | "REJECTED", feedback: string) => {
-    const response = await homeworkApi.reviewSubmission({ submissionId, status, feedback });
-    // Обновляем статус проверенной домашки локально в списке преподавателя
+    const response = await homeworkApi.reviewSubmission({ submissionId, status, feedback }); 
     setSubmissions(prev => prev.map(s => s.id === submissionId ? response.data : s));
   };
 

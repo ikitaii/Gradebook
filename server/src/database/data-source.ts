@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import "reflect-metadata";
-
+import { ProgramItem } from "../entities/ProgramItem";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -54,6 +54,7 @@ database: process.env.DB_NAME,
     Subject,
     TeacherSubject,
     Lesson,
+    ProgramItem,
     Attendance,
     Grade,
     Lab,

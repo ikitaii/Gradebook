@@ -1,14 +1,4 @@
 import api from ".";
-
-export const getGroupsRequest =
-  async () => {
-    const response = await api.get(
-      "/groups"
-    );
-
-    return response.data;
-  };
-
 export const createGroupRequest =
   async (name: string) => {
     const response = await api.post(
@@ -21,6 +11,15 @@ export const createGroupRequest =
     return response.data;
   };
 
+export const getGroupsRequest =
+  async () => {
+    const response =
+      await api.get(
+        "/groups"
+      );
+
+    return response.data;
+  };
 export const deleteGroupRequest =
   async (id: number) => {
     const response =

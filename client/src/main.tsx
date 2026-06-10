@@ -4,7 +4,6 @@ import { Toaster } from "react-hot-toast";
 
 import App from "./App";
 import "./index.css";
-
 import { AuthProvider } from "./entities/auth/auth.store";
 import { CourseProvider } from "./entities/course/course.store";
 import { GroupProvider } from "./entities/group/group.store";
@@ -19,7 +18,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <GradeProvider>
             <HomeworkProvider>
               <Toaster position="top-right" />
-              <App />
+              <AuthProvider>
+                <App />
+              </AuthProvider>
             </HomeworkProvider>
           </GradeProvider>
         </GroupProvider>

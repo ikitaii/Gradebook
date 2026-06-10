@@ -1,8 +1,12 @@
-export type UserRole = "TEACHER" | "STUDENT";
-
 export interface User {
-  id: string;
-  login: string; 
-  role: UserRole;
+  id: number;
+
   fullName: string;
+
+  login: string;
+
+  role:
+    | "ADMIN"
+    | "TEACHER"
+    | "STUDENT";
 }

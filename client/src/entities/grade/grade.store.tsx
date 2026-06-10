@@ -41,12 +41,11 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const saveGrade = async (studentId: string, lessonId: string, value: number, comment?: string) => {
-    await gradeApi.setGrade({ studentId, lessonId, value, comment });
-    // Локально обновляем массив оценок в стейте, чтобы не делать лишний перезапрос к API
+    await gradeApi.setGrade({ studentId, lessonId, value, comment }); 
     setGrades((prev) => {
       const filtered = prev.filter(g => !(g.studentId === studentId && g.lessonId === lessonId));
       const newGrade: Grade = {
-        id: Math.random().toString(), // Временный ID для фронтенда, бэкенд перезапишет
+        id: Math.random().toString(),  
         studentId,
         lessonId,
         value,

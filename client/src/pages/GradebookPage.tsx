@@ -42,7 +42,7 @@ export default function GradebookPage() {
   const handleCellClick = async (studentId: string, lessonId: string, currentVal?: number) => {
     if (user?.role !== "TEACHER") return;
     const valueStr = prompt(`Enter grade (1-5) for this lesson:`, currentVal?.toString() || "");
-    if (valueStr === null) return; // Нажали отмену
+    if (valueStr === null) return;  
     
     const value = parseInt(valueStr, 10);
     if (isNaN(value) || value < 1 || value > 5) {
@@ -74,7 +74,7 @@ export default function GradebookPage() {
           <option value="">-- Select Course --</option>
           {user?.role === "TEACHER" 
             ? courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)
-            : courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>) // Студент тут в будущем увидит только свои курсы группы
+            : courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>) 
           }
         </select>
       </div>
@@ -99,7 +99,6 @@ export default function GradebookPage() {
               <tr key={student.id}>
                 <td><strong>{student.fullName}</strong></td>
                 {allLessons.map(lesson => {
-                  // Ищем оценку конкретного студента за конкретный урок
                   const gradeObj = grades.find(g => g.studentId === student.id && g.lessonId === lesson.id);
                   return (
                     <td 

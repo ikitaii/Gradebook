@@ -1,7 +1,6 @@
 import { Navigate } from "react-router-dom";
 
-import { useAuth } from "../store/AuthContext";
-
+import { useAuth } from "../entities/auth/useAuth";
 export default function RoleRoute({
   children,
   roles,
@@ -11,13 +10,13 @@ export default function RoleRoute({
   roles: string[];
 }) {
   const {
-    user,
-    loading,
+  user,
+  isLoading,
   } = useAuth();
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) {
+  return <div>Loading...</div>;
+}
 
   if (!user) {
     return (

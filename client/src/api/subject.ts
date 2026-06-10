@@ -2,9 +2,10 @@ import api from ".";
 
 export const getSubjectsRequest =
   async () => {
-    const response = await api.get(
-      "/subjects"
-    );
+    const response =
+      await api.get(
+        "/subjects"
+      );
 
     return response.data;
   };

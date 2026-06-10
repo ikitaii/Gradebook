@@ -23,5 +23,5 @@ export class Grade {
   student!: Student;
 
   @Column()
-  value!: string;
+  value!: number;
 }

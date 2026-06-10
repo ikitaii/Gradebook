@@ -1,10 +1,11 @@
 import api from ".";
 
-export const getDashboardStats =
+export const getDashboardRequest =
   async () => {
-    const response = await api.get(
-      "/dashboard/stats"
-    );
+    const response =
+      await api.get(
+        "/dashboard"
+      );
 
     return response.data;
   };

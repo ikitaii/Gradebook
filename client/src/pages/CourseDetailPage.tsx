@@ -132,14 +132,12 @@ export default function CourseDetailPage() {
               <thead>
                 <tr style={{ backgroundColor: "#f2f2f2" }}>
                   <th>ФИО Студента</th>
-                  <th>Email</th>
                 </tr>
               </thead>
               <tbody>
                 {assignedStudents.map((student, idx) => (
                   <tr key={student.id + idx}>
                     <td><strong>{student.fullName}</strong></td>
-                    <td>{student.email}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
-
-import { useAuth } from "../store/AuthContext";
+import { useAuth } from "../entities/auth/useAuth";
 
 export default function PublicRoute({
   children,
@@ -8,16 +7,16 @@ export default function PublicRoute({
   children: React.ReactNode;
 }) {
   const {
-    isAuth,
-    loading,
+    user,
+    isLoading,
   } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (isAuth) {
-    return <Navigate to="/" />;
+  if (user) {
+    return <Navigate to="/" replace />;
   }
 
   return children;

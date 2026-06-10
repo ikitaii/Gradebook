@@ -1,169 +1,558 @@
-import { useEffect, useState } from "react";
-import MainLayout from "../layouts/MainLayout";
-import { getJournalRequest } from "../api/journal";
-import { updateAttendanceRequest } from "../api/attendance";
-import { updateGradeRequest } from "../api/grades";
-import FilterSelect from "../components/filters/FilterSelect";
-import { getGroupsRequest } from "../api/groups";
-import { exportCsv } from "../utils/exportCsv";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-type JournalType = {
-  student: {
-    id: number;
-    fullName: string;
-  };
+import MainLayout from "../layouts/MainLayout";
+
+import {
+  getJournalRequest,
+  setGradeRequest,
+  setAttendanceRequest,
+} from "../api/journal";
+
+import { getGroupsRequest } from "../api/groups";
+
+import { getSubjectsRequest } from "../api/subject";
+
+import { useAuth } from "../entities/auth/auth.store";
+
+type StudentType = {
+  id: number;
 
   expelled: boolean;
 
   isNew: boolean;
 
-  grades: {
-    lessonId: number;
-    lessonDate: string;
-    value: number | null;
-    gradeId: number | null;
-  }[];
+  user: {
+    fullName: string;
+  };
+};
 
-  attendance: {
-    attendanceId: number | null;
-    lessonId: number;
-    lessonDate: string;
-    status: "PRESENT" | "ABSENT" | "LATE";
-  }[];
+type LessonType = {
+  id: number;
+
+  lessonDate: string;
+
+  subject: {
+    name: string;
+  } | null;
+};
+
+type GradeType = {
+  id: number;
+
+  value: number;
+
+  student: {
+    id: number;
+  };
+
+  lesson: {
+    id: number;
+  };
+};
+
+type AttendanceType = {
+  id: number;
+
+  status: string;
+
+  student: {
+    id: number;
+  };
+
+  lesson: {
+    id: number;
+  };
 };
 
 type GroupType = {
   id: number;
+
+  name: string;
+};
+
+type SubjectType = {
+  id: number;
+
   name: string;
 };
 
 export default function JournalPage() {
-  const [journal, setJournal] =
-    useState<JournalType[]>([]);
+  const { user } =
+    useAuth();
 
-  const [hoveredRow, setHoveredRow] =
-    useState<number | null>(null);
+  const [students, setStudents] =
+    useState<StudentType[]>(
+      []
+    );
 
-  const [groupFilter, setGroupFilter] =
-    useState("Все группы");
+  const [lessons, setLessons] =
+    useState<LessonType[]>(
+      []
+    );
+
+  const [grades, setGrades] =
+    useState<GradeType[]>(
+      []
+    );
+
+  const [
+    attendances,
+    setAttendances,
+  ] = useState<
+    AttendanceType[]
+  >([]);
 
   const [groups, setGroups] =
-    useState<GroupType[]>([]);
-
-  const loadJournal = async () => {
-    try {
-      const data =
-        await getJournalRequest(1);
-
-      setJournal(data.students);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleAttendance = async (
-    studentId: number,
-    lessonId: number,
-    status:
-      | "PRESENT"
-      | "ABSENT"
-      | "LATE"
-  ) => {
-    try {
-      await updateAttendanceRequest(
-        studentId,
-        lessonId,
-        status === "PRESENT"
-      );
-
-      loadJournal();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleGrade = async (
-    studentId: number,
-    lessonId: number,
-    currentValue: number | null
-  ) => {
-    const value = Number(
-      prompt(
-        "Введите оценку",
-        String(currentValue || "")
-      )
+    useState<GroupType[]>(
+      []
     );
 
-    if (!value) return;
+  const [subjects, setSubjects] =
+    useState<
+      SubjectType[]
+    >([]);
 
-    try {
-      await updateGradeRequest(
-        studentId,
-        lessonId,
-        value
-      );
+  const [
+    selectedGroup,
+    setSelectedGroup,
+  ] = useState("");
 
-      loadJournal();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const [
+    selectedSubject,
+    setSelectedSubject,
+  ] = useState("");
 
-  const getAverageGrade = (
-    grades: {
-      value: number | null;
-    }[]
+  const [loading, setLoading] =
+    useState(true);
+
+ const loadJournal =
+  async (
+    groupId?: string,
+    subjectId?: string
   ) => {
-    const filtered = grades.filter(
-      (g) => g.value !== null
-    );
+      try {
+        const response =
+          await getJournalRequest(
+            groupId,
+            subjectId
+          );
 
-    if (filtered.length === 0)
-      return 0;
+        setStudents(
+          response.students || []
+        );
 
-    const total = filtered.reduce(
-      (acc, grade) =>
-        acc + Number(grade.value),
-      0
-    );
+        setLessons(
+          response.lessons || []
+        );
 
-    return (
-      total / filtered.length
-    ).toFixed(1);
-  };
+        setGrades(
+          response.grades || []
+        );
 
-  const handleExportCsv = () => {
-  const rows: string[][] = [
-    ["Студент", "Средний балл"],
-    ...journal.map((student) => [
-      student.student.fullName,
-      String(
-        getAverageGrade(
-          student.grades
-        )
-      ),
-    ]),
-  ];
+        setAttendances(
+          response.attendances ||
+            []
+        );
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  exportCsv("journal", rows);
-};
+  const loadFilters =
+    async () => {
+      try {
+        const groupsData =
+          await getGroupsRequest();
+
+        const subjectsData =
+          await getSubjectsRequest();
+
+        setGroups(
+          groupsData
+        );
+
+        setSubjects(
+          subjectsData
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   useEffect(() => {
-    loadJournal();
+    loadFilters();
 
-    getGroupsRequest().then((data) => {
-      setGroups(data);
-    });
+    loadJournal();
   }, []);
+
+  const getGrade =
+    (
+      studentId: number,
+      lessonId: number
+    ) => {
+      return grades.find(
+        (grade) =>
+          grade.student.id ===
+            studentId &&
+          grade.lesson.id ===
+            lessonId
+      );
+    };
+
+  const getAttendance =
+    (
+      studentId: number,
+      lessonId: number
+    ) => {
+      return attendances.find(
+        (
+          attendance
+        ) =>
+          attendance.student.id ===
+            studentId &&
+          attendance.lesson.id ===
+            lessonId
+      );
+    };
+
+  const setGrade =
+    async (
+      studentId: number,
+      lessonId: number
+    ) => {
+      const value =
+        prompt(
+          "Введите оценку"
+        );
+
+      if (!value) {
+        return;
+      }
+
+      try {
+        await setGradeRequest(
+          studentId,
+          lessonId,
+          Number(value)
+        );
+
+        loadJournal(
+          selectedGroup,
+          selectedSubject
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const setAttendance =
+    async (
+      event: React.MouseEvent,
+      studentId: number,
+      lessonId: number
+    ) => {
+      event.preventDefault();
+
+      let status =
+        "ABSENT";
+
+      if (
+        event.button === 1
+      ) {
+        status = "LATE";
+      }
+
+      try {
+        await setAttendanceRequest(
+          studentId,
+          lessonId,
+          status
+        );
+
+        loadJournal(
+          selectedGroup,
+          selectedSubject
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const studentAverage =
+    useMemo(() => {
+      const values =
+        grades.map(
+          (grade) =>
+            grade.value
+        );
+
+      if (
+        values.length === 0
+      ) {
+        return 0;
+      }
+
+      return (
+        values.reduce(
+          (
+            acc,
+            current
+          ) =>
+            acc +
+            current,
+          0
+        ) / values.length
+      ).toFixed(1);
+    }, [grades]);
+
+  const attendancePercent =
+    useMemo(() => {
+      if (
+        attendances.length ===
+        0
+      ) {
+        return 100;
+      }
+
+      const present =
+        attendances.filter(
+          (
+            attendance
+          ) =>
+            attendance.status ===
+            "PRESENT"
+        ).length;
+
+      return Math.round(
+        (present /
+          attendances.length) *
+          100
+      );
+    }, [attendances]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div
+          className="
+            text-2xl
+            font-bold
+          "
+        >
+          Загрузка...
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (
+    user?.role ===
+    "STUDENT"
+  ) {
+    return (
+      <MainLayout>
+        <div className="mb-10">
+          <h1
+            className="
+              text-5xl
+              font-black
+              mb-3
+            "
+          >
+            Мои оценки
+          </h1>
+
+          <p
+            className="
+              text-gray-500
+              text-lg
+            "
+          >
+            Успеваемость и
+            посещаемость
+          </p>
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            gap-6
+            mb-10
+          "
+        >
+          <div
+            className="
+              bg-white
+              border
+              border-gray-200
+              rounded-3xl
+              p-8
+            "
+          >
+            <div
+              className="
+                text-gray-500
+                mb-4
+              "
+            >
+              Средний балл
+            </div>
+
+            <div
+              className="
+                text-6xl
+                font-black
+              "
+            >
+              {
+                studentAverage
+              }
+            </div>
+          </div>
+
+          <div
+            className="
+              bg-white
+              border
+              border-gray-200
+              rounded-3xl
+              p-8
+            "
+          >
+            <div
+              className="
+                text-gray-500
+                mb-4
+              "
+            >
+              Посещаемость
+            </div>
+
+            <div
+              className="
+                text-6xl
+                font-black
+              "
+            >
+              {
+                attendancePercent
+              }
+              %
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="
+            bg-white
+            border
+            border-gray-200
+            rounded-3xl
+            overflow-hidden
+          "
+        >
+          <div
+            className="
+              grid
+              grid-cols-3
+              bg-gray-50
+              border-b
+              border-gray-200
+              font-bold
+            "
+          >
+            <div className="p-5">
+              Предмет
+            </div>
+
+            <div className="p-5">
+              Оценка
+            </div>
+
+            <div className="p-5">
+              Посещение
+            </div>
+          </div>
+
+          {lessons.map(
+            (lesson) => {
+              const grade =
+                grades.find(
+                  (
+                    item
+                  ) =>
+                    item.lesson
+                      .id ===
+                    lesson.id
+                );
+
+              const attendance =
+                attendances.find(
+                  (
+                    item
+                  ) =>
+                    item.lesson
+                      .id ===
+                    lesson.id
+                );
+
+              return (
+                <div
+                  key={
+                    lesson.id
+                  }
+                  className="
+                    grid
+                    grid-cols-3
+                    border-b
+                    border-gray-100
+                  "
+                >
+                  <div className="p-5 font-semibold">
+                    {
+                      lesson
+                        .subject
+                        ?.name ||
+                        "Без предмета"
+                    }
+                  </div>
+
+                  <div className="p-5">
+                    {grade
+                      ?.value ||
+                      "-"}
+                  </div>
+
+                  <div className="p-5">
+                    {attendance
+                      ?.status ||
+                      "PRESENT"}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
-      <div className="mb-8">
+      <div className="mb-10">
         <h1
           className="
-            text-4xl
-            font-bold
-            mb-2
+            text-5xl
+            font-black
+            mb-3
           "
         >
           Электронный журнал
@@ -172,383 +561,372 @@ export default function JournalPage() {
         <p
           className="
             text-gray-500
-            mb-4
+            text-lg
           "
         >
           Управление
           посещаемостью и
-          оценками студентов
+          оценками
         </p>
-
-        <button
-          onClick={handleExportCsv}
-          className="
-            bg-black
-            hover:bg-gray-800
-            transition
-            text-white
-            px-4
-            py-2
-            rounded-xl
-          "
-        >
-          Экспорт CSV
-        </button>
-      </div>
-
-      <div className="mb-6">
-        <FilterSelect
-          value={groupFilter}
-          onChange={setGroupFilter}
-          options={[
-            "Все группы",
-            ...groups.map((g) => g.name),
-          ]}
-        />
       </div>
 
       <div
         className="
-          bg-white
-          border
-          border-gray-200
-          rounded-3xl
-          overflow-hidden
-          shadow-sm
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          gap-6
+          mb-8
         "
       >
-        <div
+        <select
+          value={
+            selectedGroup
+          }
+          onChange={(
+            event
+          ) => {
+            setSelectedGroup(
+              event.target.value
+            );
+
+            loadJournal(
+              event.target.value,
+              selectedSubject
+            );
+          }}
           className="
-            overflow-x-auto
+            h-[64px]
+            rounded-2xl
+            border
+            border-gray-200
+            px-5
+            bg-white
           "
         >
-          <table
-            className="
-              w-full
-              border-collapse
-            "
-          >
-            <thead
+          <option value="">
+            Выберите группу
+          </option>
+
+          {groups.map(
+            (group) => (
+              <option
+                key={
+                  group.id
+                }
+                value={String(
+                  group.id
+                )}
+              >
+                {group.name}
+              </option>
+            )
+          )}
+        </select>
+
+        <select
+          value={
+            selectedSubject
+          }
+          onChange={(
+            event
+          ) => {
+            setSelectedSubject(
+              event.target.value
+            );
+
+            loadJournal(
+              selectedGroup,
+              event.target.value
+            );
+          }}
+          className="
+            h-[64px]
+            rounded-2xl
+            border
+            border-gray-200
+            px-5
+            bg-white
+          "
+        >
+          <option value="">
+            Выберите предмет
+          </option>
+
+          {subjects.map(
+            (
+              subject
+            ) => (
+              <option
+                key={
+                  subject.id
+                }
+                value={String(
+                  subject.id
+                )}
+              >
+                {
+                  subject.name
+                }
+              </option>
+            )
+          )}
+        </select>
+      </div>
+
+      <div
+        className="
+          overflow-auto
+          bg-white
+          rounded-3xl
+          border
+          border-gray-200
+        "
+      >
+        <table className="w-full">
+          <thead>
+            <tr
               className="
                 bg-gray-50
+                border-b
+                border-gray-200
               "
             >
-              <tr>
-                <th
-                  className="
-                    text-left
-                    p-5
-                    border-b
-                    border-gray-200
-                    font-semibold
-                    min-w-[260px]
-                  "
-                >
-                  Студент
-                </th>
+              <th
+                className="
+                  text-left
+                  p-5
+                  min-w-[250px]
+                "
+              >
+                Студент
+              </th>
 
-                <th
-                  className="
-                    text-left
-                    p-5
-                    border-b
-                    border-gray-200
-                    font-semibold
-                  "
-                >
-                  Оценки
-                </th>
+              {lessons.map(
+                (lesson) => (
+                  <th
+                    key={
+                      lesson.id
+                    }
+                    className="
+                      p-4
+                      min-w-[120px]
+                    "
+                  >
+                    <div
+                      className="
+                        text-sm
+                        font-bold
+                        mb-1
+                      "
+                    >
+                      {
+                        lesson
+                          .subject
+                          ?.name ||
+                          "Без предмета"
+                      }
+                    </div>
 
-                <th
-                  className="
-                    text-left
-                    p-5
-                    border-b
-                    border-gray-200
-                    font-semibold
-                  "
-                >
-                  Средний балл
-                </th>
+                    <div
+                      className="
+                        text-xs
+                        text-gray-500
+                      "
+                    >
+                      {new Date(
+                        lesson.lessonDate
+                      ).toLocaleDateString()}
+                    </div>
+                  </th>
+                )
+              )}
 
-                <th
-                  className="
-                    text-left
-                    p-5
-                    border-b
-                    border-gray-200
-                    font-semibold
-                  "
-                >
-                  Посещаемость
-                </th>
-              </tr>
-            </thead>
+              <th
+                className="
+                  p-5
+                  min-w-[160px]
+                "
+              >
+                Средний балл
+              </th>
+            </tr>
+          </thead>
 
-            <tbody>
-              {journal.map(
-                (item) => (
+          <tbody>
+            {students.map(
+              (
+                student
+              ) => {
+                const studentGrades =
+                  grades.filter(
+                    (
+                      grade
+                    ) =>
+                      grade
+                        .student
+                        .id ===
+                      student.id
+                  );
+
+                const average =
+                  studentGrades.length >
+                  0
+                    ? (
+                        studentGrades.reduce(
+                          (
+                            acc,
+                            current
+                          ) =>
+                            acc +
+                            current.value,
+                          0
+                        ) /
+                        studentGrades.length
+                      ).toFixed(
+                        1
+                      )
+                    : "-";
+
+                return (
                   <tr
                     key={
-                      item.student.id
+                      student.id
                     }
-                    onMouseEnter={() =>
-                      setHoveredRow(
-                        item.student.id
-                      )
-                    }
-                    onMouseLeave={() =>
-                      setHoveredRow(
-                        null
-                      )
-                    }
-                    className={`
-                      transition
+                    className="
                       border-b
                       border-gray-100
-                      ${
-                        hoveredRow ===
-                        item.student.id
-                          ? "bg-gray-50"
-                          : ""
-                      }
-                      ${
-                        item.expelled
-                          ? "opacity-40"
-                          : ""
-                      }
-                    `}
+                    "
                   >
-                    <td className="p-5">
-                      <div
-                        className="
-                          flex
-                          items-center
-                          gap-3
-                        "
-                      >
-                        <div>
-                          <div
-                            className="
-                              font-semibold
-                              text-lg
-                            "
-                          >
-                            {
-                              item
-                                .student
-                                .fullName
+                    <td
+                      className="
+                        p-5
+                        font-semibold
+                      "
+                    >
+                      {
+                        student
+                          .user
+                          .fullName
+                      }
+                    </td>
+
+                    {lessons.map(
+                      (
+                        lesson
+                      ) => {
+                        const grade =
+                          getGrade(
+                            student.id,
+                            lesson.id
+                          );
+
+                        const attendance =
+                          getAttendance(
+                            student.id,
+                            lesson.id
+                          );
+
+                        return (
+                          <td
+                            key={
+                              lesson.id
                             }
-                          </div>
-
-                          <div
                             className="
-                              flex
-                              gap-2
-                              mt-2
+                              p-2
                             "
                           >
-                            {item.isNew && (
-                              <span
-                                className="
-                                  bg-green-100
-                                  text-green-700
-                                  px-3
-                                  py-1
-                                  rounded-full
-                                  text-xs
-                                  font-medium
-                                "
-                              >
-                                Новый
-                              </span>
-                            )}
-
-                            {item.expelled && (
-                              <span
-                                className="
-                                  bg-red-100
-                                  text-red-700
-                                  px-3
-                                  py-1
-                                  rounded-full
-                                  text-xs
-                                  font-medium
-                                "
-                              >
-                                Отчислен
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-5">
-                      <div
-                        className="
-                          flex
-                          flex-wrap
-                          gap-2
-                        "
-                      >
-                        {item.grades.map(
-                          (
-                            grade
-                          ) => (
-                            <button
-                              key={
-                                grade.lessonId
-                              }
+                            <div
                               onClick={() =>
-                                handleGrade(
-                                  item
-                                    .student
-                                    .id,
-                                  grade.lessonId,
-                                  grade.value
-                                )
-                              }
-                              className={`
-                                w-12
-                                h-12
-                                rounded-xl
-                                font-bold
-                                transition
-                                border
-                                ${
-                                  !grade.value
-                                    ? "bg-gray-100 border-gray-200 text-gray-500"
-                                    : grade.value >=
-                                      4
-                                    ? "bg-green-100 border-green-200 text-green-700"
-                                    : grade.value >=
-                                      3
-                                    ? "bg-yellow-100 border-yellow-200 text-yellow-700"
-                                    : "bg-red-100 border-red-200 text-red-700"
-                                }
-                                hover:scale-105
-                              `}
-                            >
-                              {grade.value ||
-                                "—"}
-                            </button>
-                          )
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="p-5">
-                      <div
-                        className="
-                          text-2xl
-                          font-bold
-                        "
-                      >
-                        {getAverageGrade(
-                          item.grades
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="p-5">
-                      <div
-                        className="
-                          flex
-                          flex-wrap
-                          gap-2
-                        "
-                      >
-                        {item.attendance.map(
-                          (
-                            attendance
-                          ) => (
-                            <button
-                              key={
-                                attendance.lessonId
-                              }
-                              onClick={() =>
-                                handleAttendance(
-                                  item
-                                    .student
-                                    .id,
-                                  attendance.lessonId,
-                                  attendance.status ===
-                                    "PRESENT"
-                                    ? "ABSENT"
-                                    : "PRESENT"
+                                setGrade(
+                                  student.id,
+                                  lesson.id
                                 )
                               }
                               onContextMenu={(
-                                e
-                              ) => {
-                                e.preventDefault();
-
-                                handleAttendance(
-                                  item
-                                    .student
-                                    .id,
-                                  attendance.lessonId,
-                                  "ABSENT"
-                                );
-                              }}
+                                event
+                              ) =>
+                                setAttendance(
+                                  event,
+                                  student.id,
+                                  lesson.id
+                                )
+                              }
                               onMouseDown={(
-                                e
+                                event
                               ) => {
                                 if (
-                                  e.button ===
+                                  event.button ===
                                   1
                                 ) {
-                                  e.preventDefault();
-
-                                  handleAttendance(
-                                    item
-                                      .student
-                                      .id,
-                                    attendance.lessonId,
-                                    "LATE"
+                                  setAttendance(
+                                    event,
+                                    student.id,
+                                    lesson.id
                                   );
                                 }
                               }}
                               className={`
-                                w-12
-                                h-12
-                                rounded-xl
-                                border
-                                transition
-                                text-lg
-                                font-bold
-                                hover:scale-105
-
+                                h-[70px]
+                                rounded-2xl
+                                flex
+                                flex-col
+                                items-center
+                                justify-center
+                                cursor-pointer
+                                border-2
                                 ${
-                                  attendance.status ===
-                                  "PRESENT"
-                                    ? "bg-green-100 border-green-200 text-green-700"
-                                    : attendance.status ===
+                                  attendance?.status ===
+                                  "ABSENT"
+                                    ? "bg-red-100 border-red-300"
+                                    : attendance?.status ===
                                       "LATE"
-                                    ? "bg-yellow-100 border-yellow-200 text-yellow-700"
-                                    : "bg-red-100 border-red-200 text-red-700"
+                                    ? "bg-yellow-100 border-yellow-300"
+                                    : "bg-gray-50 border-gray-200"
                                 }
                               `}
                             >
-                              {attendance.status ===
-                              "PRESENT"
-                                ? "✅"
-                                : attendance.status ===
-                                  "LATE"
-                                ? "⏰"
-                                : "❌"}
-                            </button>
-                          )
-                        )}
-                      </div>
+                              <div
+                                className="
+                                  text-2xl
+                                  font-black
+                                "
+                              >
+                                {grade
+                                  ?.value ||
+                                  "-"}
+                              </div>
+
+                              <div
+                                className="
+                                  text-xs
+                                  text-gray-500
+                                "
+                              >
+                                {attendance?.status ||
+                                  "PRESENT"}
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      }
+                    )}
+
+                    <td
+                      className="
+                        text-center
+                        font-black
+                        text-xl
+                      "
+                    >
+                      {average}
                     </td>
                   </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
+                );
+              }
+            )}
+          </tbody>
+        </table>
       </div>
     </MainLayout>
   );

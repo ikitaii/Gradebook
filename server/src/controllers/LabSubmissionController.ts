@@ -1,27 +1,105 @@
-import { Request, Response } from "express";
-import { LabSubmissionService } from "../services/LabSubmissionServices";
+import {
+  Request,
+  Response,
+} from "express";
+
+import { AppDataSource } from "../database/data-source";
+
+import { LabSubmission } from "../entities/LabSubmission";
 
 export class LabSubmissionController {
-  static async submit(req: Request, res: Response) {
-    const file = req.file;
+  static async getAll(
+    req: Request,
+    res: Response
+  ) {
+    try {
+      const submissions =
+        await AppDataSource
+          .getRepository(
+            LabSubmission
+          )
+          .find({
+            relations: {
+              student: {
+                user: true,
+              },
 
-    const submission = await LabSubmissionService.submit({
-      ...req.body,
-      fileUrl: file?.path,
-    });
+              lab: true,
+            },
 
-    res.json(submission);
+            order: {
+              id: "DESC",
+            },
+          });
+
+      return res.json(
+        submissions
+      );
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        message:
+          "Ошибка получения сдач",
+      });
+    }
   }
 
-  static async getAll(req: Request, res: Response) {
-    const data = await LabSubmissionService.getAll();
-    res.json(data);
+  static async review(
+    req: Request,
+    res: Response
+  ) {
+    try {
+      const submissionId =
+        Number(
+          req.params.id
+        );
+
+      const {
+        grade,
+        comment,
+      } = req.body;
+
+      const repo =
+        AppDataSource.getRepository(
+          LabSubmission
+        );
+
+      const submission =
+        await repo.findOneBy({
+          id: submissionId,
+        });
+
+      if (!submission) {
+        return res.status(404).json({
+          message:
+            "Сдача не найдена",
+        });
+      }
+
+      submission.grade =
+        grade;
+
+      submission.comment =
+        comment;
+
+      submission.checked =
+        true;
+
+      await repo.save(
+        submission
+      );
+
+      return res.json(
+        submission
+      );
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        message:
+          "Ошибка проверки лабораторной",
+      });
+    }
   }
-  static async check(req: Request, res: Response) {
-  const id = req.params.id as string;
-
-  const updated = await LabSubmissionService.check(id, req.body);
-
-  res.json(updated);
-}
 }

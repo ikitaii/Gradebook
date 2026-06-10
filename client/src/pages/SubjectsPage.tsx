@@ -6,30 +6,67 @@ import {
 import MainLayout from "../layouts/MainLayout";
 
 import {
-  getSubjectsRequest,
-  createSubjectRequest,
-  deleteSubjectRequest,
-} from "../api/subject";
+  getProgramRequest,
+  createProgramRequest,
+} from "../api/program";
 
-type SubjectType = {
+type ProgramItemType = {
   id: number;
-  name: string;
+
+  title: string;
+
+  description: string;
+
+  type: string;
+
+  materialUrl: string;
+
+  deadline: string;
+
+  teamWork: boolean;
 };
 
-export default function SubjectsPage() {
-  const [subjects, setSubjects] =
-    useState<SubjectType[]>([]);
+export default function SubjectPage() {
+  const [items, setItems] =
+    useState<
+      ProgramItemType[]
+    >([]);
 
-  const [name, setName] =
+  const [title, setTitle] =
     useState("");
 
-  const loadSubjects =
+  const [
+    description,
+    setDescription,
+  ] = useState("");
+
+  const [type, setType] =
+    useState("LAB");
+
+  const [
+    materialUrl,
+    setMaterialUrl,
+  ] = useState("");
+
+  const [
+    deadline,
+    setDeadline,
+  ] = useState("");
+
+  const [
+    teamWork,
+    setTeamWork,
+  ] = useState(false);
+
+  const loadProgram =
     async () => {
       try {
         const data =
-          await getSubjectsRequest();
+          await getProgramRequest(
+            1
+          );
 
-        setSubjects(data);
+        setItems(data);
       } catch (error) {
         console.log(error);
       }
@@ -38,66 +75,67 @@ export default function SubjectsPage() {
   const handleCreate =
     async () => {
       try {
-        if (!name.trim()) return;
+        await createProgramRequest(
+          {
+            subjectId: 1,
 
-        await createSubjectRequest(
-          name
+            title,
+
+            description,
+
+            type,
+
+            materialUrl,
+
+            deadline,
+
+            teamWork,
+          }
         );
 
-        setName("");
+        setTitle("");
 
-        loadSubjects();
-      } catch (error) {
-        console.log(error);
-      }
-    };
+        setDescription("");
 
-  const handleDelete =
-    async (id: number) => {
-      try {
-        await deleteSubjectRequest(
-          id
-        );
+        setMaterialUrl("");
 
-        loadSubjects();
+        setDeadline("");
+
+        setTeamWork(false);
+
+        loadProgram();
       } catch (error) {
         console.log(error);
       }
     };
 
   useEffect(() => {
-    loadSubjects();
+    loadProgram();
   }, []);
 
   return (
     <MainLayout>
-      <div
-        className="
-          flex
-          items-center
-          justify-between
-          mb-8
-        "
-      >
-        <div>
-          <h1
-            className="
-              text-3xl
-              font-bold
-            "
-          >
-            Предметы
-          </h1>
+      <div className="mb-8">
+        <h1
+          className="
+            text-4xl
+            font-bold
+            mb-2
+          "
+        >
+          Программа предмета
+        </h1>
 
-          <p
-            className="
-              text-gray-500
-              mt-1
-            "
-          >
-            Управление предметами
-          </p>
-        </div>
+        <p
+          className="
+            text-gray-500
+          "
+        >
+          Управление
+          лабораторными,
+          теорией и
+          дедлайнами
+        </p>
       </div>
 
       <div
@@ -105,39 +143,31 @@ export default function SubjectsPage() {
           bg-white
           border
           border-gray-200
-          rounded-2xl
+          rounded-3xl
           p-6
           shadow-sm
           mb-8
         "
       >
-        <h2
-          className="
-            text-xl
-            font-semibold
-            mb-5
-          "
-        >
-          Создать предмет
-        </h2>
-
         <div
           className="
-            flex
+            grid
+            grid-cols-1
+            md:grid-cols-2
             gap-4
+            mb-4
           "
         >
           <input
             type="text"
-            placeholder="Название предмета"
-            value={name}
+            placeholder="Название"
+            value={title}
             onChange={(e) =>
-              setName(
+              setTitle(
                 e.target.value
               )
             }
             className="
-              flex-1
               border
               border-gray-300
               rounded-xl
@@ -148,150 +178,285 @@ export default function SubjectsPage() {
             "
           />
 
-          <button
-            onClick={handleCreate}
+          <select
+            value={type}
+            onChange={(e) =>
+              setType(
+                e.target.value
+              )
+            }
             className="
-              bg-black
-              text-white
-              px-6
+              border
+              border-gray-300
               rounded-xl
-              hover:bg-gray-800
-              transition
+              px-4
+              py-3
+              outline-none
+              focus:border-black
             "
           >
-            Создать
-          </button>
+            <option value="LAB">
+              Лабораторная
+            </option>
+
+            <option value="THEORY">
+              Теория
+            </option>
+
+            <option value="PRACTICE">
+              Практика
+            </option>
+
+            <option value="TEST">
+              Тест
+            </option>
+          </select>
+
+          <textarea
+            placeholder="Описание"
+            value={
+              description
+            }
+            onChange={(e) =>
+              setDescription(
+                e.target.value
+              )
+            }
+            className="
+              border
+              border-gray-300
+              rounded-xl
+              px-4
+              py-3
+              outline-none
+              focus:border-black
+              min-h-[120px]
+            "
+          />
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-4
+            "
+          >
+            <input
+              type="text"
+              placeholder="Ссылка на материалы"
+              value={
+                materialUrl
+              }
+              onChange={(e) =>
+                setMaterialUrl(
+                  e.target
+                    .value
+                )
+              }
+              className="
+                border
+                border-gray-300
+                rounded-xl
+                px-4
+                py-3
+                outline-none
+                focus:border-black
+              "
+            />
+
+            <input
+              type="datetime-local"
+              value={
+                deadline
+              }
+              onChange={(e) =>
+                setDeadline(
+                  e.target
+                    .value
+                )
+              }
+              className="
+                border
+                border-gray-300
+                rounded-xl
+                px-4
+                py-3
+                outline-none
+                focus:border-black
+              "
+            />
+
+            <label
+              className="
+                flex
+                items-center
+                gap-3
+              "
+            >
+              <input
+                type="checkbox"
+                checked={
+                  teamWork
+                }
+                onChange={(
+                  e
+                ) =>
+                  setTeamWork(
+                    e.target
+                      .checked
+                  )
+                }
+              />
+
+              Командная работа
+            </label>
+          </div>
         </div>
+
+        <button
+          onClick={
+            handleCreate
+          }
+          className="
+            bg-black
+            text-white
+            px-6
+            py-3
+            rounded-xl
+            hover:opacity-90
+            transition
+          "
+        >
+          Создать элемент
+        </button>
       </div>
 
       <div
         className="
-          bg-white
-          border
-          border-gray-200
-          rounded-2xl
-          shadow-sm
-          overflow-hidden
+          flex
+          flex-col
+          gap-5
         "
       >
-        <table className="w-full">
-          <thead
-            className="
-              bg-gray-50
-              border-b
-              border-gray-200
-            "
-          >
-            <tr>
-              <th
+        {items.map(
+          (item) => (
+            <div
+              key={item.id}
+              className="
+                bg-white
+                border
+                border-gray-200
+                rounded-3xl
+                p-6
+                shadow-sm
+              "
+            >
+              <div
                 className="
-                  text-left
-                  px-6
-                  py-4
-                  font-semibold
+                  flex
+                  justify-between
+                  items-start
+                  mb-4
                 "
               >
-                ID
-              </th>
-
-              <th
-                className="
-                  text-left
-                  px-6
-                  py-4
-                  font-semibold
-                "
-              >
-                Название предмета
-              </th>
-
-              <th
-                className="
-                  text-right
-                  px-6
-                  py-4
-                  font-semibold
-                "
-              >
-                Действия
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {subjects.map(
-              (subject) => (
-                <tr
-                  key={subject.id}
-                  className="
-                    border-b
-                    border-gray-100
-                    hover:bg-gray-50
-                    transition
-                  "
-                >
-                  <td
+                <div>
+                  <div
                     className="
-                      px-6
-                      py-4
+                      text-2xl
+                      font-bold
+                      mb-2
                     "
                   >
-                    {subject.id}
-                  </td>
+                    {item.title}
+                  </div>
 
-                  <td
+                  <div
                     className="
-                      px-6
-                      py-4
+                      text-gray-500
+                    "
+                  >
+                    {item.type}
+                  </div>
+                </div>
+
+                {item.teamWork && (
+                  <div
+                    className="
+                      bg-blue-100
+                      text-blue-700
+                      px-4
+                      py-2
+                      rounded-full
+                      text-sm
                       font-medium
                     "
                   >
-                    {subject.name}
-                  </td>
+                    Командная
+                  </div>
+                )}
+              </div>
 
-                  <td
+              <div
+                className="
+                  text-gray-700
+                  mb-5
+                "
+              >
+                {
+                  item.description
+                }
+              </div>
+
+              <div
+                className="
+                  flex
+                  flex-wrap
+                  gap-6
+                  text-sm
+                "
+              >
+                <div>
+                  <span
                     className="
-                      px-6
-                      py-4
-                      text-right
+                      font-semibold
                     "
                   >
-                    <button
-                      onClick={() =>
-                        handleDelete(
-                          subject.id
-                        )
+                    Дедлайн:
+                  </span>{" "}
+                  {item.deadline
+                    ? new Date(
+                        item.deadline
+                      ).toLocaleString()
+                    : "Нет"}
+                </div>
+
+                <div>
+                  <span
+                    className="
+                      font-semibold
+                    "
+                  >
+                    Материалы:
+                  </span>{" "}
+                  {item.materialUrl ? (
+                    <a
+                      href={
+                        item.materialUrl
                       }
+                      target="_blank"
                       className="
-                        bg-red-500
-                        text-white
-                        px-4
-                        py-2
-                        rounded-lg
-                        hover:bg-red-600
-                        transition
+                        text-blue-600
                       "
                     >
-                      Удалить
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
-
-        {subjects.length ===
-          0 && (
-          <div
-            className="
-              p-10
-              text-center
-              text-gray-500
-            "
-          >
-            Предметы отсутствуют
-          </div>
+                      Открыть
+                    </a>
+                  ) : (
+                    "Нет"
+                  )}
+                </div>
+              </div>
+            </div>
+          )
         )}
       </div>
     </MainLayout>

@@ -5,14 +5,18 @@ import {
 
 import MainLayout from "../layouts/MainLayout";
 
-import { getLessonsRequest } from "../api/lessons";
+import {
+  getLessonsRequest,
+  createLessonRequest,
+  deleteLessonRequest,
+} from "../api/lessons";
 
 type LessonType = {
   id: number;
 
-  date: string;
+  lessonDate: string;
 
-  lessonNumber: number;
+  topic: string;
 
   subject: {
     name: string;
@@ -31,7 +35,21 @@ type LessonType = {
 
 export default function LessonsPage() {
   const [lessons, setLessons] =
-    useState<LessonType[]>([]);
+    useState<LessonType[]>(
+      []
+    );
+
+  const [date, setDate] =
+    useState("");
+
+  const [groupId, setGroupId] =
+    useState("");
+
+  const [subjectId, setSubjectId] =
+    useState("");
+
+  const [teacherId, setTeacherId] =
+    useState("");
 
   const loadLessons =
     async () => {
@@ -45,158 +63,305 @@ export default function LessonsPage() {
       }
     };
 
+  const handleCreate =
+    async () => {
+      try {
+        await createLessonRequest(
+          {
+            date,
+
+            groupId:
+              Number(
+                groupId
+              ),
+
+            subjectId:
+              Number(
+                subjectId
+              ),
+
+            teacherId:
+              Number(
+                teacherId
+              ),
+          }
+        );
+
+        setDate("");
+
+        setGroupId("");
+
+        setSubjectId("");
+
+        setTeacherId("");
+
+        loadLessons();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  const handleDelete =
+    async (
+      id: number
+    ) => {
+      try {
+        await deleteLessonRequest(
+          id
+        );
+
+        loadLessons();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
   useEffect(() => {
     loadLessons();
   }, []);
 
   return (
     <MainLayout>
+      <div className="mb-8">
+        <h1
+          className="
+            text-4xl
+            font-bold
+            mb-2
+          "
+        >
+          Управление парами
+        </h1>
+
+        <p
+          className="
+            text-gray-500
+          "
+        >
+          Создание и
+          управление
+          расписанием
+        </p>
+      </div>
+
       <div
         className="
-          flex
-          items-center
-          justify-between
+          bg-white
+          border
+          border-gray-200
+          rounded-3xl
+          p-6
+          shadow-sm
           mb-8
         "
       >
-        <div>
-          <h1
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            xl:grid-cols-4
+            gap-4
+            mb-5
+          "
+        >
+          <input
+            type="datetime-local"
+            value={date}
+            onChange={(e) =>
+              setDate(
+                e.target.value
+              )
+            }
             className="
-              text-3xl
-              font-bold
+              border
+              border-gray-300
+              rounded-xl
+              px-4
+              py-3
+              outline-none
+              focus:border-black
             "
-          >
-            Пары
-          </h1>
+          />
 
-          <p
+          <input
+            type="number"
+            placeholder="ID группы"
+            value={groupId}
+            onChange={(e) =>
+              setGroupId(
+                e.target.value
+              )
+            }
             className="
-              text-gray-500
-              mt-1
+              border
+              border-gray-300
+              rounded-xl
+              px-4
+              py-3
+              outline-none
+              focus:border-black
             "
-          >
-            Управление учебными парами
-          </p>
+          />
+
+          <input
+            type="number"
+            placeholder="ID предмета"
+            value={subjectId}
+            onChange={(e) =>
+              setSubjectId(
+                e.target.value
+              )
+            }
+            className="
+              border
+              border-gray-300
+              rounded-xl
+              px-4
+              py-3
+              outline-none
+              focus:border-black
+            "
+          />
+
+          <input
+            type="number"
+            placeholder="ID преподавателя"
+            value={teacherId}
+            onChange={(e) =>
+              setTeacherId(
+                e.target.value
+              )
+            }
+            className="
+              border
+              border-gray-300
+              rounded-xl
+              px-4
+              py-3
+              outline-none
+              focus:border-black
+            "
+          />
         </div>
+
+        <button
+          onClick={
+            handleCreate
+          }
+          className="
+            bg-black
+            text-white
+            px-6
+            py-3
+            rounded-xl
+            hover:opacity-90
+            transition
+          "
+        >
+          Создать пару
+        </button>
       </div>
 
       <div
         className="
-          grid
-          grid-cols-1
-          md:grid-cols-2
-          xl:grid-cols-3
-          gap-6
+          flex
+          flex-col
+          gap-5
         "
       >
-        {lessons.map((lesson) => (
-          <div
-            key={lesson.id}
-            className="
-              bg-white
-              border
-              border-gray-200
-              rounded-2xl
-              p-6
-              shadow-sm
-              hover:shadow-md
-              transition
-            "
-          >
+        {lessons.map(
+          (lesson) => (
             <div
+              key={lesson.id}
               className="
+                bg-white
+                border
+                border-gray-200
+                rounded-3xl
+                p-6
+                shadow-sm
                 flex
-                items-center
                 justify-between
-                mb-5
+                items-center
               "
             >
-              <div
-                className="
-                  text-xl
-                  font-bold
-                "
-              >
-                {
-                  lesson.subject
-                    .name
-                }
+              <div>
+                <div
+                  className="
+                    text-2xl
+                    font-bold
+                    mb-2
+                  "
+                >
+                  {
+                    lesson.subject
+                      .name
+                  }
+                </div>
+
+                <div
+                  className="
+                    text-gray-500
+                    mb-1
+                  "
+                >
+                  Группа:{" "}
+                  {
+                    lesson
+                      .group
+                      .name
+                  }
+                </div>
+
+                <div
+                  className="
+                    text-gray-500
+                    mb-1
+                  "
+                >
+                  Преподаватель:{" "}
+                  {
+                    lesson
+                      .teacher
+                      .user
+                      .fullName
+                  }
+                </div>
+
+                <div
+                  className="
+                    text-gray-500
+                  "
+                >
+                  {new Date(
+                    lesson.lessonDate
+                  ).toLocaleString()}
+                </div>
               </div>
 
-              <div
+              <button
+                onClick={() =>
+                  handleDelete(
+                    lesson.id
+                  )
+                }
                 className="
-                  bg-black
+                  bg-red-500
                   text-white
-                  px-3
-                  py-1
-                  rounded-full
-                  text-sm
+                  px-5
+                  py-3
+                  rounded-xl
+                  hover:bg-red-600
+                  transition
                 "
               >
-                Пара №
-                {
-                  lesson.lessonNumber
-                }
-              </div>
+                Удалить
+              </button>
             </div>
-
-            <div
-              className="
-                flex
-                flex-col
-                gap-3
-                text-gray-700
-              "
-            >
-              <div>
-                <span className="font-semibold">
-                  Группа:
-                </span>{" "}
-                {
-                  lesson.group
-                    .name
-                }
-              </div>
-
-              <div>
-                <span className="font-semibold">
-                  Преподаватель:
-                </span>{" "}
-                {
-                  lesson.teacher
-                    .user
-                    .fullName
-                }
-              </div>
-
-              <div>
-                <span className="font-semibold">
-                  Дата:
-                </span>{" "}
-                {lesson.date}
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
-
-      {lessons.length ===
-        0 && (
-        <div
-          className="
-            bg-white
-            border
-            border-gray-200
-            rounded-2xl
-            p-10
-            text-center
-            text-gray-500
-            mt-8
-          "
-        >
-          Пары отсутствуют
-        </div>
-      )}
     </MainLayout>
   );
 }

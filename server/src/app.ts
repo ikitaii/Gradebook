@@ -12,6 +12,9 @@ import labRoutes from "./routes/labRoutes";
 import labSubmissionRoutes from "./routes/labSubmissionRoutes";
 import lessonRoutes from "./routes/lessonRoutes";
 import path from "path";
+import programRoutes from "./routes/programRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
+
 dotenv.config();
 
 const app = express();
@@ -34,7 +37,8 @@ app.use("/auth", authRoutes);
 app.use("/journal", journalRoutes);
 app.use("/labs", labRoutes);
 app.use("/lab-submissions", labSubmissionRoutes);
-
+app.use("/dashboard",dashboardRoutes);
+app.use("/program",programRoutes);
 app.get("/", (_, res) => {
   res.json({
     message: "Server works",

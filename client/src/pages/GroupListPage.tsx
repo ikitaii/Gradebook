@@ -60,7 +60,11 @@ export default function GroupListPage() {
                 <div style={{ background: "#f9f9f9", padding: "10px", borderRadius: "6px" }}>
                   <h3> Students ({group.students?.length || 0})</h3>
                   <ul>
-                    {group.students?.map(s => <li key={s.id}>{s.fullName} ({s.email})</li>)}
+                    {group.students?.map(s => (
+                      <li key={s.id}>
+                      {s.fullName}
+                       </li>
+                      ))}
                   </ul>
                   
                 

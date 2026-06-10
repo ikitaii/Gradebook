@@ -1,49 +1,49 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  ManyToOne,
   Column,
+  ManyToOne,
   CreateDateColumn,
 } from "typeorm";
 
-import { Team } from "./Team";
-import { Lab } from "./Lab";
 import { Student } from "./Student";
 
-export enum SubmissionStatus {
-  PENDING = "PENDING",
-  CHECKED = "CHECKED",
-  REVISION = "REVISION",
-  LATE = "LATE",
-}
+import { Lab } from "./Lab";
 
 @Entity()
 export class LabSubmission {
   @PrimaryGeneratedColumn()
   id!: number;
- 
-  @ManyToOne(() => Lab, (lab) => lab.submissions)
-  lab!: Lab;
- 
-  @ManyToOne(() => Student)
+
+  @ManyToOne(
+    () => Student
+  )
   student!: Student;
- 
-  @ManyToOne(() => Team, { nullable: true })
-  team?: Team;
+
+  @ManyToOne(
+    () => Lab
+  )
+  lab!: Lab;
 
   @Column()
   fileUrl!: string;
 
   @Column({
-    type: "varchar",
-  })
-  status!: SubmissionStatus;
-
-  @Column({
     nullable: true,
   })
-  grade!: string;
+  grade!: number;
+
+  @Column({
+    type: "text",
+    nullable: true,
+  })
+  comment!: string;
+
+  @Column({
+    default: false,
+  })
+  checked!: boolean;
 
   @CreateDateColumn()
-  submittedAt!: Date;
+  createdAt!: Date;
 }

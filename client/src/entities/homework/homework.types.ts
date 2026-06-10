@@ -2,8 +2,7 @@ import type { User } from "../auth/auth.types";
 
 
 export type SubmissionStatus = "SUBMITTED" | "ACCEPTED" | "REJECTED";
-
-// Само задание, которое создал учитель
+ 
 export interface Homework {
   id: string;
   lessonId: string;
@@ -11,13 +10,12 @@ export interface Homework {
   description: string;
   dueDate?: string;
 }
-
-// Ответ студента на это задание
+ 
 export interface HomeworkSubmission {
   id: string;
   homeworkId: string;
   studentId: string;
-  student?: User; // Здесь используется импортированный User
+  student?: User;  
   solutionText: string; 
   status: SubmissionStatus;
   teacherFeedback?: string;

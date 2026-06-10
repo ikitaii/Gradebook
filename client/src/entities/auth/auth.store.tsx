@@ -8,7 +8,7 @@ export interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: { login: string; password: string }) => Promise<User>; // <-- ИСПРАВИЛИ ТУТ
+  login: (data: { login: string; password: string }) => Promise<User>;
   logout: () => void;
 }
 
@@ -35,8 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       try {
-        const response = await authApi.me();
+        const response =
+        await authApi.me();
+
         setUser(response.data);
+        setToken(savedToken);
       } catch {
         logout();
       } finally {
@@ -46,17 +49,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (data: { login: string; password: string }) => { // <-- ИСПРАВИЛИ ТУТ
-    const response = await authApi.login(data);
-    const jwt = response.data.token;
+  const login = async (
+  data: {
+    login: string;
+    password: string;
+  }
+) => {
+  const response =
+    await authApi.login(data);
 
-    localStorage.setItem("token", jwt);
-    setToken(jwt);
-    
-    const meResponse = await authApi.me();
-    setUser(meResponse.data);
-    return meResponse.data;
-  };
+  const jwt =
+    response.data.accessToken;
+
+  localStorage.setItem(
+    "token",
+    jwt
+  );
+
+  setToken(jwt);
+
+  const payload = JSON.parse(
+    atob(jwt.split(".")[1])
+  );
+
+  setUser(payload);
+
+  setIsLoading(false);
+
+  return payload;
+};
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -69,4 +90,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
+};
+export const useAuth = () => {
+  const context =
+    React.useContext(
+      AuthContext
+    );
+
+  if (!context) {
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
+  }
+
+  return context;
 };

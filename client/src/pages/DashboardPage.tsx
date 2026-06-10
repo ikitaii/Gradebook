@@ -1,47 +1,195 @@
-import MainLayout from "../layouts/MainLayout";
-import AverageGradeCard from "../components/analytics/AverageGradeCard";
-import AttendanceCard from "../components/analytics/AttendanceCard";
-import StudentsCountCard from "../components/analytics/StudentsCountCard";
-import GradesChart from "../components/analytics/GradesChart";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   Users,
-  BookOpen,
   GraduationCap,
   CalendarDays,
+  FlaskConical,
+  ClipboardCheck,
+  BookOpen,
+  Clock3,
+  Upload,
 } from "lucide-react";
 
+import MainLayout from "../layouts/MainLayout";
+
+import { useAuth } from "../entities/auth/auth.store";
+
+import { getDashboardRequest } from "../api/dashboard";
+
+type DashboardData = {
+  studentsCount: number;
+
+  teachersCount: number;
+
+  lessonsCount: number;
+
+  labsCount: number;
+
+  averageGrade: string;
+
+  attendancePercent: number;
+
+  latestLessons: any[];
+};
+
 export default function DashboardPage() {
-  const stats = [
+  const { user } =
+    useAuth();
+
+  const [data, setData] =
+    useState<DashboardData | null>(
+      null
+    );
+
+  const loadDashboard =
+    async () => {
+      try {
+        const response =
+          await getDashboardRequest();
+
+        setData(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  if (!data) {
+    return (
+      <MainLayout>
+        <div
+          className="
+            text-2xl
+            font-bold
+          "
+        >
+          Загрузка...
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const adminCards = [
     {
-      title: "Студенты",
-      value: "128",
+      title:
+        "Студенты",
+
+      value:
+        data.studentsCount,
+
       icon: Users,
     },
 
     {
-      title: "Группы",
-      value: "12",
-      icon: GraduationCap,
+      title:
+        "Преподаватели",
+
+      value:
+        data.teachersCount,
+
+      icon:
+        GraduationCap,
     },
 
     {
-      title: "Предметы",
-      value: "18",
-      icon: BookOpen,
+      title:
+        "Пары",
+
+      value:
+        data.lessonsCount,
+
+      icon:
+        CalendarDays,
     },
 
     {
-      title: "Пары",
-      value: "54",
-      icon: CalendarDays,
+      title:
+        "Лабораторные",
+
+      value:
+        data.labsCount,
+
+      icon:
+        FlaskConical,
     },
   ];
 
-  const actions = [
-    "Создать группу",
-    "Открыть журнал",
-    "Добавить пару",
-    "Управление предметами",
+  const teacherCards = [
+    {
+      title:
+        "Пары сегодня",
+
+      value:
+        data.lessonsCount,
+
+      icon:
+        CalendarDays,
+    },
+
+    {
+      title:
+        "Непроверенные",
+
+      value:
+        data.labsCount,
+
+      icon:
+        ClipboardCheck,
+    },
+
+    {
+      title:
+        "Группы",
+
+      value:
+        3,
+
+      icon:
+        BookOpen,
+    },
+
+    {
+      title:
+        "Студенты",
+
+      value:
+        data.studentsCount,
+
+      icon:
+        Users,
+    },
+  ];
+
+  const studentCards = [
+    {
+      title:
+        "Средний балл",
+
+      value:
+        data.averageGrade,
+    },
+
+    {
+      title:
+        "Посещаемость",
+
+      value: `${data.attendancePercent}%`,
+    },
+
+    {
+      title:
+        "Всего пар",
+
+      value:
+        data.lessonsCount,
+    },
   ];
 
   return (
@@ -49,9 +197,9 @@ export default function DashboardPage() {
       <div className="mb-10">
         <h1
           className="
-            text-4xl
-            font-bold
-            mb-2
+            text-5xl
+            font-black
+            mb-3
           "
         >
           Главная панель
@@ -63,335 +211,578 @@ export default function DashboardPage() {
             text-lg
           "
         >
-          Добро пожаловать в систему
-          электронного журнала
+          Добро пожаловать в
+          систему электронного
+          журнала
         </p>
       </div>
 
-      <div
-        className="
-          grid
-          grid-cols-1
-          md:grid-cols-2
-          xl:grid-cols-4
-          gap-6
-          mb-10
-        "
-      >
-        {stats.map((item) => {
-          const Icon = item.icon;
+      {user?.role ===
+      "ADMIN" && (
+        <>
+          <div
+            className="
+              grid
+              grid-cols-1
+              md:grid-cols-2
+              xl:grid-cols-4
+              gap-6
+              mb-10
+            "
+          >
+            {adminCards.map(
+              (card) => {
+                const Icon =
+                  card.icon;
 
-          return (
+                return (
+                  <div
+                    key={
+                      card.title
+                    }
+                    className="
+                      bg-white
+                      border
+                      border-gray-200
+                      rounded-3xl
+                      p-7
+                      shadow-sm
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        justify-between
+                        items-center
+                        mb-6
+                      "
+                    >
+                      <div
+                        className="
+                          text-gray-500
+                        "
+                      >
+                        {
+                          card.title
+                        }
+                      </div>
+
+                      <div
+                        className="
+                          w-16
+                          h-16
+                          rounded-2xl
+                          bg-gray-100
+                          flex
+                          items-center
+                          justify-center
+                        "
+                      >
+                        <Icon
+                          size={
+                            30
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      className="
+                        text-6xl
+                        font-black
+                      "
+                    >
+                      {
+                        card.value
+                      }
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+
+          <div
+            className="
+              bg-white
+              border
+              border-gray-200
+              rounded-3xl
+              p-7
+              shadow-sm
+            "
+          >
             <div
-              key={item.title}
               className="
-                bg-white
-                border
-                border-gray-200
-                rounded-3xl
-                p-6
-                shadow-sm
-                hover:shadow-md
-                transition
+                text-3xl
+                font-black
+                mb-8
+              "
+            >
+              Система
+            </div>
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                md:grid-cols-2
+                gap-6
               "
             >
               <div
                 className="
-                  flex
-                  items-center
-                  justify-between
-                  mb-6
+                  border
+                  border-gray-200
+                  rounded-2xl
+                  p-6
                 "
               >
+                <div
+                  className="
+                    text-xl
+                    font-bold
+                    mb-2
+                  "
+                >
+                  Пользователи
+                </div>
+
                 <div
                   className="
                     text-gray-500
-                    text-sm
-                    font-medium
                   "
                 >
-                  {item.title}
+                  Управление
+                  студентами и
+                  преподавателями
+                </div>
+              </div>
+
+              <div
+                className="
+                  border
+                  border-gray-200
+                  rounded-2xl
+                  p-6
+                "
+              >
+                <div
+                  className="
+                    text-xl
+                    font-bold
+                    mb-2
+                  "
+                >
+                  Расписание
                 </div>
 
                 <div
                   className="
-                    w-12
-                    h-12
-                    rounded-2xl
-                    bg-gray-100
-                    flex
-                    items-center
-                    justify-center
+                    text-gray-500
                   "
                 >
-                  <Icon size={22} />
+                  Контроль пар и
+                  учебного процесса
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {user?.role ===
+      "TEACHER" && (
+        <>
+          <div
+            className="
+              grid
+              grid-cols-1
+              md:grid-cols-2
+              xl:grid-cols-4
+              gap-6
+              mb-10
+            "
+          >
+            {teacherCards.map(
+              (card) => {
+                const Icon =
+                  card.icon;
+
+                return (
+                  <div
+                    key={
+                      card.title
+                    }
+                    className="
+                      bg-white
+                      border
+                      border-gray-200
+                      rounded-3xl
+                      p-7
+                      shadow-sm
+                    "
+                  >
+                    <div
+                      className="
+                        flex
+                        justify-between
+                        items-center
+                        mb-6
+                      "
+                    >
+                      <div
+                        className="
+                          text-gray-500
+                        "
+                      >
+                        {
+                          card.title
+                        }
+                      </div>
+
+                      <div
+                        className="
+                          w-16
+                          h-16
+                          rounded-2xl
+                          bg-gray-100
+                          flex
+                          items-center
+                          justify-center
+                        "
+                      >
+                        <Icon
+                          size={
+                            30
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      className="
+                        text-6xl
+                        font-black
+                      "
+                    >
+                      {
+                        card.value
+                      }
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+
+          <div
+            className="
+              bg-white
+              border
+              border-gray-200
+              rounded-3xl
+              p-7
+              shadow-sm
+            "
+          >
+            <div
+              className="
+                text-3xl
+                font-black
+                mb-8
+              "
+            >
+              Последние сдачи
+            </div>
+
+            <div
+              className="
+                flex
+                flex-col
+                gap-5
+              "
+            >
+              <div
+                className="
+                  border
+                  border-gray-200
+                  rounded-2xl
+                  p-5
+                  flex
+                  justify-between
+                  items-center
+                  flex-wrap
+                  gap-4
+                "
+              >
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-4
+                  "
+                >
+                  <div
+                    className="
+                      w-14
+                      h-14
+                      rounded-2xl
+                      bg-gray-100
+                      flex
+                      items-center
+                      justify-center
+                    "
+                  >
+                    <Upload />
+                  </div>
+
+                  <div>
+                    <div
+                      className="
+                        text-xl
+                        font-bold
+                        mb-1
+                      "
+                    >
+                      Иванов И.И.
+                    </div>
+
+                    <div
+                      className="
+                        text-gray-500
+                      "
+                    >
+                      ЛР №2 —
+                      React
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="
+                    text-gray-500
+                  "
+                >
+                  5 минут назад
                 </div>
               </div>
 
               <div
                 className="
-                  text-5xl
-                  font-bold
+                  border
+                  border-gray-200
+                  rounded-2xl
+                  p-5
+                  flex
+                  justify-between
+                  items-center
+                  flex-wrap
+                  gap-4
                 "
               >
-                {item.value}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-<div className="mb-10">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-    <AverageGradeCard />
-    <AttendanceCard />
-    <StudentsCountCard />
-  </div>
-
-  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-    <h2 className="text-2xl font-semibold mb-6">
-      Аналитика успеваемости
-    </h2>
-    <GradesChart />
-  </div>
-</div>
-      <div
-        className="
-          grid
-          grid-cols-1
-          xl:grid-cols-2
-          gap-6
-        "
-      >
-        <div
-          className="
-            bg-white
-            border
-            border-gray-200
-            rounded-3xl
-            p-6
-            shadow-sm
-          "
-        >
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-              mb-6
-            "
-          >
-            <h2
-              className="
-                text-2xl
-                font-semibold
-              "
-            >
-              Быстрые действия
-            </h2>
-
-            <span
-              className="
-                text-sm
-                text-gray-400
-              "
-            >
-              Actions
-            </span>
-          </div>
-
-          <div
-            className="
-              flex
-              flex-col
-              gap-4
-            "
-          >
-            {actions.map(
-              (action) => (
-                <button
-                  key={action}
+                <div
                   className="
-                    text-left
-                    border
-                    border-gray-200
-                    rounded-2xl
-                    px-5
-                    py-4
-                    hover:bg-gray-50
-                    hover:border-gray-300
-                    transition
-                    font-medium
+                    flex
+                    items-center
+                    gap-4
                   "
                 >
-                  {action}
-                </button>
+                  <div
+                    className="
+                      w-14
+                      h-14
+                      rounded-2xl
+                      bg-gray-100
+                      flex
+                      items-center
+                      justify-center
+                    "
+                  >
+                    <Upload />
+                  </div>
+
+                  <div>
+                    <div
+                      className="
+                        text-xl
+                        font-bold
+                        mb-1
+                      "
+                    >
+                      Петров П.П.
+                    </div>
+
+                    <div
+                      className="
+                        text-gray-500
+                      "
+                    >
+                      ЛР №3 —
+                      TypeScript
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="
+                    text-gray-500
+                  "
+                >
+                  20 минут назад
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {user?.role ===
+      "STUDENT" && (
+        <>
+          <div
+            className="
+              grid
+              grid-cols-1
+              md:grid-cols-3
+              gap-6
+              mb-10
+            "
+          >
+            {studentCards.map(
+              (card) => (
+                <div
+                  key={
+                    card.title
+                  }
+                  className="
+                    bg-white
+                    border
+                    border-gray-200
+                    rounded-3xl
+                    p-7
+                    shadow-sm
+                  "
+                >
+                  <div
+                    className="
+                      text-gray-500
+                      mb-5
+                    "
+                  >
+                    {
+                      card.title
+                    }
+                  </div>
+
+                  <div
+                    className="
+                      text-6xl
+                      font-black
+                    "
+                  >
+                    {
+                      card.value
+                    }
+                  </div>
+                </div>
               )
             )}
           </div>
-        </div>
-
-        <div
-          className="
-            bg-white
-            border
-            border-gray-200
-            rounded-3xl
-            p-6
-            shadow-sm
-          "
-        >
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-              mb-6
-            "
-          >
-            <h2
-              className="
-                text-2xl
-                font-semibold
-              "
-            >
-              Последняя активность
-            </h2>
-
-            <span
-              className="
-                text-sm
-                text-gray-400
-              "
-            >
-              Activity
-            </span>
-          </div>
 
           <div
             className="
-              flex
-              flex-col
-              gap-4
+              bg-white
+              border
+              border-gray-200
+              rounded-3xl
+              p-7
+              shadow-sm
             "
           >
             <div
               className="
-                border
-                border-gray-200
-                rounded-2xl
-                p-4
-                hover:bg-gray-50
-                transition
+                text-3xl
+                font-black
+                mb-8
               "
             >
-              <div
-                className="
-                  font-medium
-                  mb-1
-                "
-              >
-                Добавлена новая группа
-              </div>
-
-              <div
-                className="
-                  text-sm
-                  text-gray-500
-                "
-              >
-                ИС-21
-              </div>
+              Ближайшие пары
             </div>
 
             <div
               className="
-                border
-                border-gray-200
-                rounded-2xl
-                p-4
-                hover:bg-gray-50
-                transition
+                flex
+                flex-col
+                gap-5
               "
             >
-              <div
-                className="
-                  font-medium
-                  mb-1
-                "
-              >
-                Обновлены оценки
-              </div>
+              {data.latestLessons.map(
+                (
+                  lesson
+                ) => (
+                  <div
+                    key={
+                      lesson.id
+                    }
+                    className="
+                      border
+                      border-gray-200
+                      rounded-2xl
+                      p-5
+                      flex
+                      justify-between
+                      items-center
+                      flex-wrap
+                      gap-4
+                    "
+                  >
+                    <div>
+                      <div
+                        className="
+                          text-2xl
+                          font-bold
+                          mb-2
+                        "
+                      >
+                        {
+                          lesson
+                            .subject
+                            ?.name ||
+                            "Без предмета"
+                        }
+                      </div>
 
-              <div
-                className="
-                  text-sm
-                  text-gray-500
-                "
-              >
-                Предмет: Математика
-              </div>
-            </div>
+                      <div
+                        className="
+                          text-gray-500
+                        "
+                      >
+                        {
+                          lesson
+                            .group
+                            ?.name ||
+                            "Без группы"
+                        }
+                      </div>
+                    </div>
 
-            <div
-              className="
-                border
-                border-gray-200
-                rounded-2xl
-                p-4
-                hover:bg-gray-50
-                transition
-              "
-            >
-              <div
-                className="
-                  font-medium
-                  mb-1
-                "
-              >
-                Создана новая пара
-              </div>
-
-              <div
-                className="
-                  text-sm
-                  text-gray-500
-                "
-              >
-                Программирование
-              </div>
-            </div>
-
-            <div
-              className="
-                border
-                border-gray-200
-                rounded-2xl
-                p-4
-                hover:bg-gray-50
-                transition
-              "
-            >
-              <div
-                className="
-                  font-medium
-                  mb-1
-                "
-              >
-                Добавлена лабораторная
-              </div>
-
-              <div
-                className="
-                  text-sm
-                  text-gray-500
-                "
-              >
-                Базы данных
-              </div>
+                    <div
+                      className="
+                        text-gray-500
+                      "
+                    >
+                      {new Date(
+                        lesson.lessonDate
+                      ).toLocaleString()}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </MainLayout>
   );
 }
