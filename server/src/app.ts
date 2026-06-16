@@ -14,6 +14,8 @@ import lessonRoutes from "./routes/lessonRoutes";
 import path from "path";
 import programRoutes from "./routes/programRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import teacherRoutes from "./routes/teacherRoutes";
+import scheduleRoutes from "./routes/scheduleRoutes";
 
 dotenv.config();
 
@@ -21,14 +23,13 @@ const app = express();
 app.use("/lessons", lessonRoutes);
 app.use(
   cors({
-    origin:
-      "http://localhost:5173",
-
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use("/groups", groupRoutes);
 app.use("/students", studentRoutes);
@@ -39,6 +40,8 @@ app.use("/labs", labRoutes);
 app.use("/lab-submissions", labSubmissionRoutes);
 app.use("/dashboard",dashboardRoutes);
 app.use("/program",programRoutes);
+app.use("/teachers", teacherRoutes);
+app.use("/schedule", scheduleRoutes);
 app.get("/", (_, res) => {
   res.json({
     message: "Server works",

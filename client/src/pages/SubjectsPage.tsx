@@ -1,464 +1,175 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import React, { useState, useEffect, useMemo } from "react";
 import MainLayout from "../layouts/MainLayout";
-
 import {
-  getProgramRequest,
-  createProgramRequest,
-} from "../api/program";
+  getSubjectsRequest,
+  createSubjectRequest,
+  updateSubjectRequest,
+  deleteSubjectRequest,
+} from "../api/subject";
 
-type ProgramItemType = {
-  id: number;
+type Subject = { id: number; name: string };
 
-  title: string;
-
-  description: string;
-
-  type: string;
-
-  materialUrl: string;
-
-  deadline: string;
-
-  teamWork: boolean;
-};
-
-export default function SubjectPage() {
-  const [items, setItems] =
-    useState<
-      ProgramItemType[]
-    >([]);
-
-  const [title, setTitle] =
-    useState("");
-
-  const [
-    description,
-    setDescription,
-  ] = useState("");
-
-  const [type, setType] =
-    useState("LAB");
-
-  const [
-    materialUrl,
-    setMaterialUrl,
-  ] = useState("");
-
-  const [
-    deadline,
-    setDeadline,
-  ] = useState("");
-
-  const [
-    teamWork,
-    setTeamWork,
-  ] = useState(false);
-
-  const loadProgram =
-    async () => {
-      try {
-        const data =
-          await getProgramRequest(
-            1
-          );
-
-        setItems(data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-  const handleCreate =
-    async () => {
-      try {
-        await createProgramRequest(
-          {
-            subjectId: 1,
-
-            title,
-
-            description,
-
-            type,
-
-            materialUrl,
-
-            deadline,
-
-            teamWork,
-          }
-        );
-
-        setTitle("");
-
-        setDescription("");
-
-        setMaterialUrl("");
-
-        setDeadline("");
-
-        setTeamWork(false);
-
-        loadProgram();
-      } catch (error) {
-        console.log(error);
-      }
-    };
+export default function SubjectsPage() {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [search, setSearch] = useState("");
+  const [newName, setNewName] = useState("");
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [editName, setEditName] = useState("");
 
   useEffect(() => {
-    loadProgram();
+    loadSubjects();
   }, []);
+
+  const loadSubjects = async () => {
+    try {
+      const data = await getSubjectsRequest();
+      setSubjects(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const filteredSubjects = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return subjects;
+    return subjects.filter((s) => s.name.toLowerCase().includes(q));
+  }, [subjects, search]);
+
+  const handleAddSubject = async () => {
+    if (!newName.trim()) return;
+    try {
+      await createSubjectRequest(newName.trim());
+      setNewName("");
+      loadSubjects();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSubject || !editName.trim()) return;
+    try {
+      await updateSubjectRequest(editingSubject.id, editName.trim());
+      setEditingSubject(null);
+      loadSubjects();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Удалить предмет?")) return;
+    try {
+      await deleteSubjectRequest(id);
+      loadSubjects();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <MainLayout>
       <div className="mb-8">
-        <h1
-          className="
-            text-4xl
-            font-bold
-            mb-2
-          "
-        >
-          Программа предмета
-        </h1>
-
-        <p
-          className="
-            text-gray-500
-          "
-        >
-          Управление
-          лабораторными,
-          теорией и
-          дедлайнами
-        </p>
+        <h1 className="text-3xl font-bold">Предметы</h1>
+        <p className="text-gray-500 mt-1">Список учебных дисциплин</p>
       </div>
 
-      <div
-        className="
-          bg-white
-          border
-          border-gray-200
-          rounded-3xl
-          p-6
-          shadow-sm
-          mb-8
-        "
-      >
-        <div
-          className="
-            grid
-            grid-cols-1
-            md:grid-cols-2
-            gap-4
-            mb-4
-          "
-        >
+      <input
+        type="text"
+        placeholder="Поиск предмета"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 outline-none focus:border-black"
+      />
+
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Добавить предмет</h2>
+        <div className="flex gap-4">
           <input
             type="text"
             placeholder="Название"
-            value={title}
-            onChange={(e) =>
-              setTitle(
-                e.target.value
-              )
-            }
-            className="
-              border
-              border-gray-300
-              rounded-xl
-              px-4
-              py-3
-              outline-none
-              focus:border-black
-            "
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="flex-1 border border-gray-300 rounded-xl px-4 py-3"
+            onKeyDown={(e) => e.key === "Enter" && handleAddSubject()}
           />
-
-          <select
-            value={type}
-            onChange={(e) =>
-              setType(
-                e.target.value
-              )
-            }
-            className="
-              border
-              border-gray-300
-              rounded-xl
-              px-4
-              py-3
-              outline-none
-              focus:border-black
-            "
+          <button
+            onClick={handleAddSubject}
+            className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800"
           >
-            <option value="LAB">
-              Лабораторная
-            </option>
-
-            <option value="THEORY">
-              Теория
-            </option>
-
-            <option value="PRACTICE">
-              Практика
-            </option>
-
-            <option value="TEST">
-              Тест
-            </option>
-          </select>
-
-          <textarea
-            placeholder="Описание"
-            value={
-              description
-            }
-            onChange={(e) =>
-              setDescription(
-                e.target.value
-              )
-            }
-            className="
-              border
-              border-gray-300
-              rounded-xl
-              px-4
-              py-3
-              outline-none
-              focus:border-black
-              min-h-[120px]
-            "
-          />
-
-          <div
-            className="
-              flex
-              flex-col
-              gap-4
-            "
-          >
-            <input
-              type="text"
-              placeholder="Ссылка на материалы"
-              value={
-                materialUrl
-              }
-              onChange={(e) =>
-                setMaterialUrl(
-                  e.target
-                    .value
-                )
-              }
-              className="
-                border
-                border-gray-300
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-                focus:border-black
-              "
-            />
-
-            <input
-              type="datetime-local"
-              value={
-                deadline
-              }
-              onChange={(e) =>
-                setDeadline(
-                  e.target
-                    .value
-                )
-              }
-              className="
-                border
-                border-gray-300
-                rounded-xl
-                px-4
-                py-3
-                outline-none
-                focus:border-black
-              "
-            />
-
-            <label
-              className="
-                flex
-                items-center
-                gap-3
-              "
-            >
-              <input
-                type="checkbox"
-                checked={
-                  teamWork
-                }
-                onChange={(
-                  e
-                ) =>
-                  setTeamWork(
-                    e.target
-                      .checked
-                  )
-                }
-              />
-
-              Командная работа
-            </label>
-          </div>
+            Добавить
+          </button>
         </div>
-
-        <button
-          onClick={
-            handleCreate
-          }
-          className="
-            bg-black
-            text-white
-            px-6
-            py-3
-            rounded-xl
-            hover:opacity-90
-            transition
-          "
-        >
-          Создать элемент
-        </button>
       </div>
 
-      <div
-        className="
-          flex
-          flex-col
-          gap-5
-        "
-      >
-        {items.map(
-          (item) => (
-            <div
-              key={item.id}
-              className="
-                bg-white
-                border
-                border-gray-200
-                rounded-3xl
-                p-6
-                shadow-sm
-              "
-            >
-              <div
-                className="
-                  flex
-                  justify-between
-                  items-start
-                  mb-4
-                "
-              >
-                <div>
-                  <div
-                    className="
-                      text-2xl
-                      font-bold
-                      mb-2
-                    "
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-6 py-4 font-semibold">ID</th>
+              <th className="text-left px-6 py-4 font-semibold">Название</th>
+              <th className="text-right px-6 py-4 font-semibold">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSubjects.map((subject) => (
+              <tr key={subject.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="px-6 py-4">{subject.id}</td>
+                <td className="px-6 py-4 font-medium">{subject.name}</td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button
+                    onClick={() => {
+                      setEditingSubject(subject);
+                      setEditName(subject.name);
+                    }}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
                   >
-                    {item.title}
-                  </div>
-
-                  <div
-                    className="
-                      text-gray-500
-                    "
+                    Редактировать
+                  </button>
+                  <button
+                    onClick={() => handleDelete(subject.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
                   >
-                    {item.type}
-                  </div>
-                </div>
+                    Удалить
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-                {item.teamWork && (
-                  <div
-                    className="
-                      bg-blue-100
-                      text-blue-700
-                      px-4
-                      py-2
-                      rounded-full
-                      text-sm
-                      font-medium
-                    "
-                  >
-                    Командная
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="
-                  text-gray-700
-                  mb-5
-                "
-              >
-                {
-                  item.description
-                }
-              </div>
-
-              <div
-                className="
-                  flex
-                  flex-wrap
-                  gap-6
-                  text-sm
-                "
-              >
-                <div>
-                  <span
-                    className="
-                      font-semibold
-                    "
-                  >
-                    Дедлайн:
-                  </span>{" "}
-                  {item.deadline
-                    ? new Date(
-                        item.deadline
-                      ).toLocaleString()
-                    : "Нет"}
-                </div>
-
-                <div>
-                  <span
-                    className="
-                      font-semibold
-                    "
-                  >
-                    Материалы:
-                  </span>{" "}
-                  {item.materialUrl ? (
-                    <a
-                      href={
-                        item.materialUrl
-                      }
-                      target="_blank"
-                      className="
-                        text-blue-600
-                      "
-                    >
-                      Открыть
-                    </a>
-                  ) : (
-                    "Нет"
-                  )}
-                </div>
-              </div>
-            </div>
-          )
+        {filteredSubjects.length === 0 && (
+          <div className="p-10 text-center text-gray-500">Предметы не найдены</div>
         )}
       </div>
+
+      {editingSubject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Редактировать предмет</h2>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setEditingSubject(null)}
+                className="px-4 py-2 rounded-lg bg-gray-200"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-6 py-2 rounded-lg bg-black text-white"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }

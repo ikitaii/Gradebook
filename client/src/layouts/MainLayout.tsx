@@ -15,6 +15,7 @@ import {
   FlaskConical,
   FileCheck,
   LogOut,
+  BookMarked,
 } from "lucide-react";
 
 import {
@@ -49,89 +50,24 @@ export default function MainLayout({
     user?.role === "ADMIN"
       ? [
           {
-            path: "/",
-            label:
-              "Главная",
-            icon:
-              LayoutDashboard,
-          },
-
-          {
-            path:
-              "/schedule",
-            label:
-              "Расписание",
-            icon:
-              CalendarDays,
-          },
-
-          {
-            path:
-              "/journal",
-            label:
-              "Журнал",
-            icon:
-              ClipboardList,
-          },
-
-          {
-            path:
-              "/groups",
-            label:
-              "Группы",
+            path: "/groups",
+            label: "Группы",
             icon: Users,
           },
-
           {
-            path:
-              "/students",
-            label:
-              "Студенты",
-            icon:
-              GraduationCap,
+            path: "/students",
+            label: "Студенты",
+            icon: GraduationCap,
           },
-
           {
-            path:
-              "/subjects",
-            label:
-              "Предметы",
-            icon:
-              BookOpen,
+            path: "/subjects",
+            label: "Предметы",
+            icon: BookOpen,
           },
-
           {
-            path:
-              "/subject",
-            label:
-              "Программа",
-            icon:
-              ClipboardList,
-          },
-
-          {
-            path:
-              "/lessons",
-            label: "Пары",
-            icon:
-              CalendarDays,
-          },
-
-          {
-            path: "/labs",
-            label:
-              "Лабораторные",
-            icon:
-              FlaskConical,
-          },
-
-          {
-            path:
-              "/lab-review",
-            label:
-              "Проверка работ",
-            icon:
-              FileCheck,
+            path: "/schedule",
+            label: "Расписание",
+            icon: CalendarDays,
           },
         ]
 
@@ -140,98 +76,46 @@ export default function MainLayout({
       ? [
           {
             path: "/",
-            label:
-              "Главная",
-            icon:
-              LayoutDashboard,
+            label: "Главная",
+            icon: LayoutDashboard,
           },
-
           {
-            path:
-              "/schedule",
-            label:
-              "Расписание",
-            icon:
-              CalendarDays,
+            path: "/journal",
+            label: "Журнал",
+            icon: ClipboardList,
           },
-
           {
-            path:
-              "/journal",
-            label:
-              "Журнал",
-            icon:
-              ClipboardList,
+            path: "/subject",
+            label: "Программа",
+            icon: BookMarked,
           },
-
           {
-            path:
-              "/subject",
-            label:
-              "Программа",
-            icon:
-              ClipboardList,
-          },
-
-          {
-            path:
-              "/lessons",
-            label: "Пары",
-            icon:
-              CalendarDays,
-          },
-
-          {
-            path: "/labs",
-            label:
-              "Лабораторные",
-            icon:
-              FlaskConical,
-          },
-
-          {
-            path:
-              "/lab-review",
-            label:
-              "Проверка работ",
-            icon:
-              FileCheck,
+            path: "/lab-review",
+            label: "Сдача работ",
+            icon: FileCheck,
           },
         ]
 
       : [
           {
             path: "/",
-            label:
-              "Главная",
-            icon:
-              LayoutDashboard,
+            label: "Главная",
+            icon: LayoutDashboard,
           },
-
           {
-            path:
-              "/schedule",
-            label:
-              "Расписание",
-            icon:
-              CalendarDays,
+            path: "/student-journal",
+            label: "Журнал",
+            icon: ClipboardList,
           },
-
           {
-            path:
-              "/journal",
-            label:
-              "Мои оценки",
-            icon:
-              ClipboardList,
+            path: "/student-subjects",
+            label: "Предметы",
+            icon: BookOpen,
           },
-
           {
             path: "/labs",
-            label:
-              "Лабораторные",
-            icon:
-              FlaskConical,
+            label: "Лабораторные",
+            icon: FlaskConical,
           },
         ];
 
@@ -324,24 +208,19 @@ export default function MainLayout({
               gap-2
             "
           >
-            {navItems.map(
-              (item) => {
-                const Icon =
-                  item.icon;
+            {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.path === "/"
+                    ? location.pathname === "/"
+                    : location.pathname === item.path ||
+                      location.pathname.startsWith(`${item.path}/`);
 
                 return (
                   <Link
-                    key={
-                      item.path
-                    }
-                    to={
-                      item.path
-                    }
-                    onClick={() =>
-                      setOpen(
-                        false
-                      )
-                    }
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setOpen(false)}
                     className={`
                       flex
                       items-center
@@ -353,28 +232,17 @@ export default function MainLayout({
                       font-medium
 
                       ${
-                        location.pathname ===
-                        item.path
+                        isActive
                           ? "bg-black text-white"
                           : "text-gray-700 hover:bg-gray-100"
                       }
                     `}
                   >
-                    <Icon
-                      size={
-                        22
-                      }
-                    />
-
-                    <span>
-                      {
-                        item.label
-                      }
-                    </span>
+                    <Icon size={22} />
+                    <span>{item.label}</span>
                   </Link>
                 );
-              }
-            )}
+              })}
           </nav>
         </div>
 

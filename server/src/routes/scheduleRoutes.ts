@@ -1,31 +1,31 @@
 import { Router } from "express";
-import { GroupController } from "../controllers/GroupController";
+import { ScheduleController } from "../controllers/ScheduleController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { roleMiddleware } from "../middlewares/roleMiddleware";
 
 const router = Router();
 
-router.get("/", authMiddleware, GroupController.getAll);
+router.get("/", authMiddleware, ScheduleController.getAll);
 
 router.post(
   "/",
   authMiddleware,
   roleMiddleware(["ADMIN"]),
-  GroupController.create
+  ScheduleController.create
 );
 
 router.put(
   "/:id",
   authMiddleware,
   roleMiddleware(["ADMIN"]),
-  GroupController.update
+  ScheduleController.update
 );
 
 router.delete(
   "/:id",
   authMiddleware,
   roleMiddleware(["ADMIN"]),
-  GroupController.delete
+  ScheduleController.delete
 );
 
 export default router;

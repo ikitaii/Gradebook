@@ -1,6 +1,8 @@
 import { Router } from "express";
 
 import { StudentController } from "../controllers/StudentController";
+import { StudentGradesController } from "../controllers/studentGrades.controller";
+import { verifyStudentAccess } from "../middlewares/verifyStudentAccess";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 
@@ -15,6 +17,27 @@ router.get(
 );
 
 router.get(
+  "/me",
+  authMiddleware,
+  roleMiddleware(["STUDENT"]),
+  StudentController.getMe
+);
+
+router.get(
+  "/me/subjects",
+  authMiddleware,
+  roleMiddleware(["STUDENT"]),
+  StudentController.getMySubjects
+);
+
+router.get(
+  "/:id/grades",
+  authMiddleware,
+  verifyStudentAccess,
+  StudentGradesController.getStudentGrades
+);
+
+router.get(
   "/:id",
   authMiddleware,
   StudentController.getOne
@@ -23,30 +46,21 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
+  roleMiddleware(["ADMIN"]),
   StudentController.create
 );
 
 router.patch(
   "/:id",
   authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
+  roleMiddleware(["ADMIN"]),
   StudentController.update
 );
 
 router.delete(
   "/:id",
   authMiddleware,
-  roleMiddleware([
-    "TEACHER",
-    "ADMIN",
-  ]),
+  roleMiddleware(["ADMIN"]),
   StudentController.delete
 );
 

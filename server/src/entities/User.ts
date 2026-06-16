@@ -12,6 +12,7 @@ import { Teacher } from "./Teacher";
 export enum UserRole {
   STUDENT = "STUDENT",
   TEACHER = "TEACHER",
+  ADMIN = "ADMIN",
 }
 
 @Entity()
@@ -31,7 +32,8 @@ export class User {
   password!: string;
 
   @Column({
-    type: "varchar",
+    type: "simple-enum",
+    enum: UserRole,
   })
   role!: UserRole;
 

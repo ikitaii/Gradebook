@@ -95,25 +95,61 @@ export default function GradebookPage() {
             </tr>
           </thead>
           <tbody>
-            {activeGroup?.students?.map(student => (
-              <tr key={student.id}>
-                <td><strong>{student.fullName}</strong></td>
-                {allLessons.map(lesson => {
-                  const gradeObj = grades.find(g => g.studentId === student.id && g.lessonId === lesson.id);
-                  return (
-                    <td 
-                      key={lesson.id} 
-                      onClick={() => handleCellClick(student.id, lesson.id, gradeObj?.value)}
-                      style={{ textAlign: "center", cursor: "pointer", backgroundColor: gradeObj ? "#e2f0d9" : "#fff" }}
-                      title={gradeObj?.comment ? `Comment: ${gradeObj.comment}` : "Click to rate"}
-                    >
-                      {gradeObj ? gradeObj.value : "-"}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
+  {activeGroup?.students?.map(
+    (student) => (
+      <tr key={student.id}>
+        <td>
+          <strong>
+            {student.fullName}
+          </strong>
+        </td>
+
+        {allLessons.map(
+          (lesson) => {
+            const gradeObj =
+              grades.find(
+                (g) =>
+                  g.student?.id === student.id &&
+                  g.lesson?.id === lesson.id
+              );
+
+            return (
+              <td
+                key={lesson.id}
+                onClick={() =>
+                  handleCellClick(
+                    student.id,
+                    lesson.id,
+                gradeObj?.value
+)
+                }
+                style={{
+                  textAlign:
+                    "center",
+                  cursor:
+                    "pointer",
+                  backgroundColor:
+                    gradeObj
+                      ? "#e2f0d9"
+                      : "#fff",
+                }}
+                title={
+                  gradeObj?.comment
+                    ? `Comment: ${gradeObj.comment}`
+                    : "Click to rate"
+                }
+              >
+                {gradeObj
+                  ? gradeObj.value
+                  : "-"}
+              </td>
+            );
+          }
+        )}
+      </tr>
+    )
+  )}
+</tbody>
         </table>
       )}
 

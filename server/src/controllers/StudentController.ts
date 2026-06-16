@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
 
 import { AppDataSource } from "../database/data-source";
 
 import { Student } from "../entities/Student";
 
-import { User } from "../entities/User";
+import { User, UserRole } from "../entities/User";
 
 import { Group } from "../entities/Group";
+import { Schedule } from "../entities/Schedule";
 
 export class StudentController {
   static async getAll(
@@ -30,6 +32,62 @@ export class StudentController {
       return res.status(500).json({
         message: "Get students error",
       });
+    }
+  }
+
+  static async getMe(req: Request, res: Response) {
+    try {
+      const userId = (req as { user?: { id: number } }).user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const student = await AppDataSource.getRepository(Student).findOne({
+        where: { user: { id: userId } },
+        relations: { user: true, group: true },
+      });
+
+      if (!student) {
+        return res.status(404).json({ message: "Student profile not found" });
+      }
+
+      return res.json(student);
+    } catch (error) {
+      return res.status(500).json({ message: "Get student profile error" });
+    }
+  }
+
+  static async getMySubjects(req: Request, res: Response) {
+    try {
+      const userId = (req as { user?: { id: number } }).user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const student = await AppDataSource.getRepository(Student).findOne({
+        where: { user: { id: userId } },
+        relations: { group: true },
+      });
+
+      if (!student) {
+        return res.status(404).json({ message: "Student profile not found" });
+      }
+
+      const schedules = await AppDataSource.getRepository(Schedule).find({
+        where: { group: { id: student.group.id } },
+        relations: { subject: true },
+      });
+
+      const map = new Map<number, { id: number; name: string }>();
+      schedules.forEach((s) => {
+        if (s.subject) {
+          map.set(s.subject.id, { id: s.subject.id, name: s.subject.name });
+        }
+      });
+
+      return res.json(Array.from(map.values()));
+    } catch (error) {
+      return res.status(500).json({ message: "Get student subjects error" });
     }
   }
 
@@ -76,6 +134,9 @@ export class StudentController {
       const {
         userId,
         groupId,
+        fullName,
+        login,
+        password,
         expelled,
         isNew,
       } = req.body;
@@ -89,23 +150,10 @@ export class StudentController {
       const groupRepository =
         AppDataSource.getRepository(Group);
 
-      const user =
-        await userRepository.findOne({
-          where: {
-            id: userId,
-          },
-        });
-
-      if (!user) {
-        return res.status(404).json({
-          message: "User not found",
-        });
-      }
-
       const group =
         await groupRepository.findOne({
           where: {
-            id: groupId,
+            id: Number(groupId),
           },
         });
 
@@ -115,17 +163,60 @@ export class StudentController {
         });
       }
 
-      const student =
-        studentRepository.create({
-          user,
-          group,
-          expelled,
-          isNew,
+      let user: User | null = null;
+
+      if (userId) {
+        user = await userRepository.findOne({
+          where: { id: Number(userId) },
         });
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+      } else if (fullName && login && password) {
+        const existing = await userRepository.findOne({
+          where: { login },
+        });
+        if (existing) {
+          return res.status(400).json({ message: "Login already exists" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 5);
+        user = userRepository.create({
+          fullName,
+          login,
+          password: hashedPassword,
+          role: UserRole.STUDENT,
+        });
+        await userRepository.save(user);
+      } else {
+        return res.status(400).json({
+          message: "Provide userId or fullName, login, password with groupId",
+        });
+      }
+
+      const existingStudent = await studentRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: { user: true },
+      });
+      if (existingStudent) {
+        return res.status(400).json({ message: "Student profile already exists" });
+      }
+
+      const student = studentRepository.create({
+        user,
+        group,
+        expelled: expelled ?? false,
+        isNew: isNew ?? true,
+      });
 
       await studentRepository.save(student);
 
-      return res.status(201).json(student);
+      const saved = await studentRepository.findOne({
+        where: { id: student.id },
+        relations: { user: true, group: true },
+      });
+
+      return res.status(201).json(saved);
     } catch (error) {
       return res.status(500).json({
         message: "Create student error",
@@ -141,6 +232,9 @@ export class StudentController {
       const { id } = req.params;
 
       const {
+        fullName,
+        login,
+        groupId,
         expelled,
         isNew,
       } = req.body;
@@ -153,6 +247,7 @@ export class StudentController {
           where: {
             id: Number(id),
           },
+          relations: { user: true, group: true },
         });
 
       if (!student) {
@@ -161,12 +256,29 @@ export class StudentController {
         });
       }
 
-      student.expelled = expelled;
-      student.isNew = isNew;
+      if (fullName !== undefined) student.user.fullName = fullName;
+      if (login !== undefined) student.user.login = login;
+      if (groupId !== undefined) {
+        const group = await AppDataSource.getRepository(Group).findOneBy({
+          id: Number(groupId),
+        });
+        if (!group) {
+          return res.status(404).json({ message: "Group not found" });
+        }
+        student.group = group;
+      }
+      if (expelled !== undefined) student.expelled = expelled;
+      if (isNew !== undefined) student.isNew = isNew;
 
+      await AppDataSource.getRepository(User).save(student.user);
       await studentRepository.save(student);
 
-      return res.json(student);
+      const saved = await studentRepository.findOne({
+        where: { id: student.id },
+        relations: { user: true, group: true },
+      });
+
+      return res.json(saved);
     } catch (error) {
       return res.status(500).json({
         message: "Update student error",

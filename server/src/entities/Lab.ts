@@ -30,6 +30,17 @@ export class Lab {
   })
   deadline!: Date;
 
+  @Column({
+    nullable: true,
+  })
+  materialUrl!: string;
+
+  @Column({
+    type: "datetime",
+    nullable: true,
+  })
+  issuedAt!: Date;
+
   @ManyToOne(() => Subject)
   subject!: Subject;
 

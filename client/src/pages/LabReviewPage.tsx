@@ -6,7 +6,7 @@ import {
 import MainLayout from "../layouts/MainLayout";
 
 import {
-  checkLabRequest,
+  reviewLabSubmissionRequest,
 } from "../api/labs";
 
 import api from "../api";
@@ -93,11 +93,9 @@ export default function LabReviewPage() {
         ) || "";
 
       try {
-        await checkLabRequest(
+        await reviewLabSubmissionRequest(
           submissionId,
-
           Number(grade),
-
           comment
         );
 

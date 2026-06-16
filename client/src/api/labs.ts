@@ -1,60 +1,42 @@
 import api from ".";
 
-export const getLabsRequest =
-  async () => {
-    const response =
-      await api.get("/labs");
+export const getLabByIdRequest = async (id: number) => {
+  const response = await api.get(`/labs/${id}`);
+  return response.data;
+};
 
-    return response.data;
-  };
+export const getLabsRequest = async () => {
+  const response = await api.get("/labs");
+  return response.data;
+};
 
-export const uploadLabRequest =
-  async (
-    labId: number,
-    file: File
-  ) => {
-    const formData =
-      new FormData();
+export const getMySubmissionsRequest = async () => {
+  const response = await api.get("/lab-submissions/my");
+  return response.data;
+};
 
-    formData.append(
-      "file",
-      file
-    );
+export const uploadLabFileRequest = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await api.post("/labs/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
 
-    formData.append(
-      "labId",
-      String(labId)
-    );
+export const submitLabRequest = async (labId: number, fileUrl: string) => {
+  const response = await api.post("/lab-submissions", { labId, fileUrl });
+  return response.data;
+};
 
-    const response =
-      await api.post(
-        "/labs/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
-      );
-
-    return response.data;
-  };
-
-export const checkLabRequest =
-  async (
-    submissionId: number,
-    grade: number,
-    comment: string
-  ) => {
-    const response =
-      await api.patch(
-        `/labs/check/${submissionId}`,
-        {
-          grade,
-          comment,
-        }
-      );
-
-    return response.data;
-  };
+export const reviewLabSubmissionRequest = async (
+  submissionId: number,
+  grade: number,
+  comment: string
+) => {
+  const response = await api.patch(`/lab-submissions/${submissionId}`, {
+    grade,
+    comment,
+  });
+  return response.data;
+};
