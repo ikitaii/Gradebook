@@ -4,14 +4,34 @@ import { LabSubmission } from "../entities/LabSubmission";
 import { Student } from "../entities/Student";
 import { Lab } from "../entities/Lab";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { UserRole } from "../entities/User";
+import { Teacher } from "../entities/Teacher";
 
 export class LabSubmissionController {
-  static async getAll(_req: AuthRequest, res: Response) {
+  static async getAll(req: AuthRequest, res: Response) {
     try {
+      const role = req.user?.role as UserRole | undefined;
+      const userId = req.user?.id;
+
+      if (!role || !userId) {
+        return res.status(401).json({ message: "Не авторизован" });
+      }
+
+      const where =
+        role === UserRole.TEACHER
+          ? await (async () => {
+              const teacher = await AppDataSource.getRepository(Teacher).findOne({
+                where: { user: { id: userId } },
+              });
+              return teacher ? { lab: { teacher: { id: teacher.id } } } : { id: -1 };
+            })()
+          : {};
+
       const submissions = await AppDataSource.getRepository(LabSubmission).find({
+        where,
         relations: {
           student: { user: true },
-          lab: { subject: true },
+          lab: { subject: true, teacher: { user: true } },
         },
         order: { createdAt: "DESC" },
       });
@@ -50,6 +70,14 @@ export class LabSubmissionController {
       const { labId, fileUrl } = req.body;
       const userId = req.user?.id;
 
+      if (!Number.isInteger(Number(labId))) {
+        return res.status(400).json({ message: "Некорректный labId" });
+      }
+
+      if (!String(fileUrl || "").trim()) {
+        return res.status(400).json({ message: "Укажите ссылку или загрузите файл" });
+      }
+
       const student = await AppDataSource.getRepository(Student).findOne({
         where: { user: { id: userId } },
       });
@@ -64,10 +92,6 @@ export class LabSubmissionController {
         return res.status(404).json({ message: "Лабораторная не найдена" });
       }
 
-      if (!fileUrl) {
-        return res.status(400).json({ message: "Укажите ссылку или загрузите файл" });
-      }
-
       const repo = AppDataSource.getRepository(LabSubmission);
       const existing = await repo.findOne({
         where: {
@@ -77,7 +101,7 @@ export class LabSubmissionController {
       });
 
       if (existing) {
-        existing.fileUrl = fileUrl;
+        existing.fileUrl = String(fileUrl).trim();
         existing.checked = false;
         await repo.save(existing);
         return res.json(existing);
@@ -86,7 +110,7 @@ export class LabSubmissionController {
       const submission = repo.create({
         student,
         lab,
-        fileUrl,
+        fileUrl: String(fileUrl).trim(),
         checked: false,
       });
 
@@ -102,11 +126,26 @@ export class LabSubmissionController {
     try {
       const { grade, comment } = req.body;
       const id = Number(req.params.id);
+      const role = req.user?.role as UserRole | undefined;
+      const userId = req.user?.id;
+
+      if (!Number.isFinite(Number(grade)) || Number(grade) < 0 || Number(grade) > 100) {
+        return res.status(400).json({ message: "Оценка должна быть числом от 0 до 100" });
+      }
+
       const repo = AppDataSource.getRepository(LabSubmission);
-      const submission = await repo.findOne({ where: { id } });
+      const submission = await repo.findOne({
+        where: { id },
+        relations: { lab: { teacher: { user: true } } },
+      });
       if (!submission) {
         return res.status(404).json({ message: "Работа не найдена" });
       }
+
+      if (role === UserRole.TEACHER && submission.lab.teacher.user.id !== userId) {
+        return res.status(403).json({ message: "Нет доступа к проверке этой работы" });
+      }
+
       submission.grade = grade;
       submission.comment = comment;
       submission.checked = true;

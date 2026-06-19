@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 
 import { AppDataSource } from "../database/data-source";
 
-import { User } from "../entities/User";
+import { User, UserRole } from "../entities/User";
 
 import {
   generateAccessToken,
@@ -28,12 +28,35 @@ export class AuthController {
         role,
       } = req.body;
 
+      const normalizedFullName = String(fullName || "").trim();
+      const normalizedLogin = String(login || "").trim();
+      const normalizedPassword = String(password || "");
+      const normalizedRole = String(role || "");
+
+      if (!normalizedFullName || !normalizedLogin || !normalizedPassword || !normalizedRole) {
+        return res.status(400).json({
+          message: "fullName, login, password и role обязательны",
+        });
+      }
+
+      if (normalizedPassword.length < 6) {
+        return res.status(400).json({
+          message: "Пароль должен быть не менее 6 символов",
+        });
+      }
+
+      if (!Object.values(UserRole).includes(normalizedRole as UserRole)) {
+        return res.status(400).json({
+          message: "Некорректная роль",
+        });
+      }
+
       const userRepository =
         AppDataSource.getRepository(User);
 
       const candidate = await userRepository.findOne({
         where: {
-          login,
+          login: normalizedLogin,
         },
       });
 
@@ -44,13 +67,13 @@ export class AuthController {
       }
 
       const hashedPassword =
-        await bcrypt.hash(password, 5);
+        await bcrypt.hash(normalizedPassword, 5);
 
       const user = userRepository.create({
-        fullName,
-        login,
+        fullName: normalizedFullName,
+        login: normalizedLogin,
         password: hashedPassword,
-        role,
+        role: normalizedRole as UserRole,
       });
 
       await userRepository.save(user);
@@ -100,13 +123,21 @@ export class AuthController {
   ) {
     try {
       const { login, password } = req.body;
+      const normalizedLogin = String(login || "").trim();
+      const normalizedPassword = String(password || "");
+
+      if (!normalizedLogin || !normalizedPassword) {
+        return res.status(400).json({
+          message: "login и password обязательны",
+        });
+      }
 
       const userRepository =
         AppDataSource.getRepository(User);
 
       const user = await userRepository.findOne({
         where: {
-          login,
+          login: normalizedLogin,
         },
       });
 
@@ -118,7 +149,7 @@ export class AuthController {
 
       const validPassword =
         await bcrypt.compare(
-          password,
+          normalizedPassword,
           user.password
         );
 

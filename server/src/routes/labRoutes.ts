@@ -2,6 +2,7 @@ import { Router } from "express";
 import { upload } from "../config/multer";
 import { LabController } from "../controllers/labController";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import { roleMiddleware } from "../middlewares/roleMiddleware";
 
 const router = Router();
 
@@ -21,6 +22,20 @@ router.post("/upload", authMiddleware, upload.single("file"), async (req, res) =
     return res.status(500).json({ message: "Ошибка загрузки файла" });
   }
 });
+
+router.get(
+  "/:id/team-candidates",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "TEACHER"]),
+  LabController.getTeamCandidates
+);
+
+router.put(
+  "/:id/team",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "TEACHER"]),
+  LabController.upsertTeam
+);
 
 router.get("/:id", authMiddleware, LabController.getOne);
 

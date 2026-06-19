@@ -16,6 +16,7 @@ import programRoutes from "./routes/programRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import teacherRoutes from "./routes/teacherRoutes";
 import scheduleRoutes from "./routes/scheduleRoutes";
+import studentGradesRoutes from "./routes/studentGrades.routes";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/dashboard",dashboardRoutes);
 app.use("/program",programRoutes);
 app.use("/teachers", teacherRoutes);
 app.use("/schedule", scheduleRoutes);
+app.use("/student-grades", studentGradesRoutes);
 app.get("/", (_, res) => {
   res.json({
     message: "Server works",

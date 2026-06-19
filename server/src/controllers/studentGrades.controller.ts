@@ -4,19 +4,59 @@ import { Grade } from "../entities/Grade";
 import { Attendance } from "../entities/Attendance";
 import { Lesson } from "../entities/Lesson";
 import { Student } from "../entities/Student";
+import { Teacher } from "../entities/Teacher";
+import { AuthRequest } from "../middlewares/authMiddleware";
+import { UserRole } from "../entities/User";
 
 export class StudentGradesController {
-  static async getStudentGrades(req: Request, res: Response) {
+  static async getStudentGrades(req: AuthRequest, res: Response) {
     try {
       const studentId = Number(req.params.id);
       if (!Number.isInteger(studentId)) {
         return res.status(400).json({ message: "Invalid student id" });
       }
+
+      const role = req.user?.role as UserRole | undefined;
+      const userId = req.user?.id;
+
+      if (!role || !userId) {
+        return res.status(401).json({ message: "Не авторизован" });
+      }
  
       // Verify student exists
-      const student = await AppDataSource.getRepository(Student).findOneBy({ id: studentId });
+      const student = await AppDataSource.getRepository(Student).findOne({
+        where: { id: studentId },
+        relations: { group: true },
+      });
       if (!student) {
         return res.status(404).json({ message: "Студент не найден" });
+      }
+
+      if (role === UserRole.TEACHER) {
+        const teacher = await AppDataSource.getRepository(Teacher).findOne({
+          where: { user: { id: userId } },
+          relations: { teacherSubjects: { group: true } },
+        });
+
+        if (!teacher) {
+          return res.status(403).json({ message: "Нет доступа" });
+        }
+
+        const teachesGroup =
+          teacher.teacherSubjects?.some((ts) => ts.group.id === student.group.id) ?? false;
+
+        if (!teachesGroup) {
+          const scheduled = await AppDataSource.getRepository(Lesson).findOne({
+            where: {
+              teacher: { id: teacher.id },
+              group: { id: student.group.id },
+            },
+          });
+
+          if (!scheduled) {
+            return res.status(403).json({ message: "Нет доступа к оценкам этого студента" });
+          }
+        }
       }
 
       // Load grades with lesson and subject

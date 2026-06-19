@@ -1,5 +1,18 @@
 import api from ".";
 
+export type LabListItem = {
+  id: number;
+  title: string;
+  description: string;
+  deadline: string;
+  issuedAt: string | null;
+  materialUrl: string | null;
+  subject: string;
+  subjectId?: number;
+  groupId?: number | null;
+  groupName?: string | null;
+};
+
 export const getLabByIdRequest = async (id: number) => {
   const response = await api.get(`/labs/${id}`);
   return response.data;
@@ -7,7 +20,7 @@ export const getLabByIdRequest = async (id: number) => {
 
 export const getLabsRequest = async () => {
   const response = await api.get("/labs");
-  return response.data;
+  return response.data as LabListItem[];
 };
 
 export const getMySubmissionsRequest = async () => {
@@ -38,5 +51,28 @@ export const reviewLabSubmissionRequest = async (
     grade,
     comment,
   });
+  return response.data;
+};
+
+export const getLabTeamCandidatesRequest = async (labId: number) => {
+  const response = await api.get(`/labs/${labId}/team-candidates`);
+  return response.data as {
+    groupId: number;
+    groupName: string;
+    students: Array<{
+      id: number;
+      fullName: string;
+      expelled: boolean;
+      isNew: boolean;
+    }>;
+    team: { id: number; name: string; studentIds: number[] } | null;
+  };
+};
+
+export const upsertLabTeamRequest = async (
+  labId: number,
+  payload: { name: string; studentIds: number[] }
+) => {
+  const response = await api.put(`/labs/${labId}/team`, payload);
   return response.data;
 };

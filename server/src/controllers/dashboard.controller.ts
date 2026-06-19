@@ -8,6 +8,7 @@ import { Lab } from "../entities/Lab";
 import { Grade } from "../entities/Grade";
 import { Attendance } from "../entities/Attendance";
 import { Schedule } from "../entities/Schedule";
+import { LabSubmission } from "../entities/LabSubmission";
 import { AuthRequest } from "../middlewares/authMiddleware";
 
 const DAY_NAMES = [
@@ -62,7 +63,14 @@ export class DashboardController {
             })
           : [];
 
-        const uncheckedLabs = await AppDataSource.getRepository(Lab).count();
+        const uncheckedLabs = teacher
+          ? await AppDataSource.getRepository(LabSubmission).count({
+              where: {
+                checked: false,
+                lab: { teacher: { id: teacher.id } },
+              },
+            })
+          : 0;
 
         return res.json({
           role: "TEACHER",

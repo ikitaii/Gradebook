@@ -9,25 +9,77 @@ import { User, UserRole } from "../entities/User";
 
 import { Group } from "../entities/Group";
 import { Schedule } from "../entities/Schedule";
+import { AuthRequest } from "../middlewares/authMiddleware";
+import { Teacher } from "../entities/Teacher";
 
 export class StudentController {
-  static async getAll(
-    req: Request,
-    res: Response
-  ) {
+  static async getAll(req: AuthRequest, res: Response) {
     try {
       const studentRepository =
         AppDataSource.getRepository(Student);
 
-      const students =
-        await studentRepository.find({
+      const role = req.user?.role as UserRole | undefined;
+      const userId = req.user?.id;
+
+      if (!role || !userId) {
+        return res.status(401).json({
+          message: "Не авторизован",
+        });
+      }
+
+      if (role === UserRole.ADMIN) {
+        const students =
+          await studentRepository.find({
+            relations: {
+              user: true,
+              group: true,
+            },
+          });
+
+        return res.json(students);
+      }
+
+      if (role === UserRole.TEACHER) {
+        const teacher = await AppDataSource.getRepository(Teacher).findOne({
+          where: { user: { id: userId } },
+          relations: {
+            teacherSubjects: { group: true },
+          },
+        });
+
+        if (!teacher) {
+          return res.json([]);
+        }
+
+        const groupIds = new Set<number>();
+        teacher.teacherSubjects?.forEach((ts) => groupIds.add(ts.group.id));
+
+        if (!groupIds.size) {
+          const scheduleRows = await AppDataSource.getRepository(Schedule).find({
+            where: { teacher: { id: teacher.id } },
+            relations: { group: true },
+          });
+          scheduleRows.forEach((row) => groupIds.add(row.group.id));
+        }
+
+        if (!groupIds.size) {
+          return res.json([]);
+        }
+
+        const students = await studentRepository.find({
+          where: Array.from(groupIds).map((groupId) => ({ group: { id: groupId } })),
           relations: {
             user: true,
             group: true,
           },
         });
 
-      return res.json(students);
+        return res.json(students);
+      }
+
+      return res.status(403).json({
+        message: "Нет доступа",
+      });
     } catch (error) {
       return res.status(500).json({
         message: "Get students error",

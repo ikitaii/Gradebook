@@ -66,6 +66,32 @@ export class ProgramController {
         teamWork,
       } = req.body;
 
+      const normalizedTitle = String(title || "").trim();
+      if (!subjectId || !Number.isInteger(Number(subjectId))) {
+        return res.status(400).json({
+          message: "Некорректный subjectId",
+        });
+      }
+      if (!normalizedTitle) {
+        return res.status(400).json({
+          message: "Название обязательно",
+        });
+      }
+
+      const allowedTypes = ["LAB", "THEORY", "PRACTICE", "TEST"];
+      if (!allowedTypes.includes(String(type))) {
+        return res.status(400).json({
+          message: "Некорректный тип элемента программы",
+        });
+      }
+
+      if (deadline && Number.isNaN(new Date(deadline).getTime())) {
+        return res.status(400).json({
+          message: "Некорректный формат дедлайна",
+        });
+      }
+      const parsedDeadline = deadline ? new Date(deadline) : undefined;
+
       const subject =
         await AppDataSource
           .getRepository(
@@ -89,12 +115,12 @@ export class ProgramController {
           )
           .create({
             subject,
-            title,
+            title: normalizedTitle,
             description,
             type,
             materialUrl,
-            deadline,
-            teamWork,
+            deadline: parsedDeadline,
+            teamWork: Boolean(teamWork),
           });
 
       await AppDataSource

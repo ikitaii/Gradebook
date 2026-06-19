@@ -4,11 +4,44 @@ import { Schedule } from "../entities/Schedule";
 import { Group } from "../entities/Group";
 import { Subject } from "../entities/Subject";
 import { Teacher } from "../entities/Teacher";
+import { AuthRequest } from "../middlewares/authMiddleware";
+import { UserRole } from "../entities/User";
 
 export class ScheduleController {
-  static async getAll(_req: Request, res: Response) {
+  static async getAll(req: AuthRequest, res: Response) {
     try {
-      const schedules = await AppDataSource.getRepository(Schedule).find({
+      const role = req.user?.role as UserRole | undefined;
+      const userId = req.user?.id;
+      const repo = AppDataSource.getRepository(Schedule);
+
+      if (!role || !userId) {
+        return res.status(401).json({ message: "Не авторизован" });
+      }
+
+      const where =
+        role === UserRole.STUDENT
+          ? await (async () => {
+              const studentGroup = await AppDataSource.getRepository(Group)
+                .createQueryBuilder("group")
+                .innerJoin("group.students", "student")
+                .innerJoin("student.user", "user")
+                .where("user.id = :userId", { userId })
+                .getOne();
+
+              return studentGroup ? { group: { id: studentGroup.id } } : { id: -1 };
+            })()
+          : role === UserRole.TEACHER
+          ? await (async () => {
+              const teacher = await AppDataSource.getRepository(Teacher).findOne({
+                where: { user: { id: userId } },
+              });
+
+              return teacher ? { teacher: { id: teacher.id } } : { id: -1 };
+            })()
+          : {};
+
+      const schedules = await repo.find({
+        where,
         relations: {
           group: true,
           subject: true,

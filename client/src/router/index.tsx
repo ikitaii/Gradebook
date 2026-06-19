@@ -91,7 +91,7 @@ const AppRouter: React.FC = () => (
         path="/schedule"
         element={
           <ProtectedRoute>
-            <RoleRoute roles={["ADMIN"]}>
+            <RoleRoute roles={["ADMIN", "TEACHER", "STUDENT"]}>
               <SchedulePage />
             </RoleRoute>
           </ProtectedRoute>

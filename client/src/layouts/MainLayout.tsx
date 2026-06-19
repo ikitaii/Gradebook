@@ -90,6 +90,11 @@ export default function MainLayout({
             icon: BookMarked,
           },
           {
+            path: "/schedule",
+            label: "Расписание",
+            icon: CalendarDays,
+          },
+          {
             path: "/lab-review",
             label: "Сдача работ",
             icon: FileCheck,
@@ -111,6 +116,11 @@ export default function MainLayout({
             path: "/student-subjects",
             label: "Предметы",
             icon: BookOpen,
+          },
+          {
+            path: "/schedule",
+            label: "Расписание",
+            icon: CalendarDays,
           },
           {
             path: "/labs",
